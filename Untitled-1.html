@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Camera Example</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const survivor = {
+            x: 100,
+            y: 100,
+            width: 50,
+            height: 50,
+            speed: 5
+        };
+
+        const camera = {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height
+        };
+
+        const gameWorld = {
+            width: 2000,
+            height: 2000,
+            elements: [
+                { x: 300, y: 300, width: 100, height: 100, color: 'red' },
+                { x: 500, y: 700, width: 150, height: 150, color: 'green' },
+                { x: 800, y: 900, width: 200, height: 200, color: 'purple' },
+            ]
+        };
+
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                    survivor.y -= survivor.speed;
+                    break;
+                case 'ArrowDown':
+                    survivor.y += survivor.speed;
+                    break;
+                case 'ArrowLeft':
+                    survivor.x -= survivor.speed;
+                    break;
+                case 'ArrowRight':
+                    survivor.x += survivor.speed;
+                    break;
+            }
+        });
+
+        function updateCamera() {
+            camera.x = survivor.x - camera.width / 2 + survivor.width / 2;
+            camera.y = survivor.y - camera.height / 2 + survivor.height / 2;
+
+            camera.x = Math.max(0, Math.min(camera.x, gameWorld.width - camera.width));
+            camera.y = Math.max(0, Math.min(camera.y, gameWorld.height - camera.height));
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(survivor.x - camera.x, survivor.y - camera.y, survivor.width, survivor.height);
+
+            gameWorld.elements.forEach(element => {
+                ctx.fillStyle = element.color;
+                ctx.fillRect(element.x - camera.x, element.y - camera.y, element.width, element.height);
+            });
+        }
+
+        function gameLoop() {
+            updateCamera();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+
+</html>

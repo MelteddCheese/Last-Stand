@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="gameOverScreen" style="display: none;">
+        <h1>Game Over</h1>
+        <p id="loseMessage">You lost ;-;</p>
+        <div id="buttonContainer">
+            <button id="replayButton">Replay</button>
+        </div>
+    </div>
+    <div id="pausedScreen" class="paused-screen">
+        <div class="paused-message">Game Paused</div>
+        <button id="playButtonPaused">Play</button>
+    </div>
+    <div id="LeaderboardScreen" style="display:none,">
+        <h1>LEADERBOARD</h1>
+        <p id="historyDisplay"></p>
+        <div id="buttonContainer_close">
+            <button id="closeButton">Close</button>
+        </div>
+    </div>
+    <div id="controls">
+        <button id="pauseButton"></button>
+        <button id="leaderboardButton">Leaderboard</button>
+    </div>
+    <p id="scoreboard">Score:<span id="score">0</span></p>
+    <div id="nameInputContainer">
+        <p>Please enter your name:</p>
+        <input type="text" id="nameInput" placeholder="Your Name">
+        <button id="startGameButton">Start Game</button>
+    </div>
+    <div class="container">
+        <div class="weapon" id="weapon1"
+            data-info="Low range, unlimited, should be targeted on the head of the zombie to destroy it">
+            <img src="./gun11.png" alt="Weapon 1">
+        </div>
+        <div class="weapon" id="weapon2"
+            data-info="Better range, limit=20, can be replenished on killing a Immune Zombie">
+            <img src="./gun2.png" alt="Weapon 2">
+        </div>
+        <div class="weapon" id="weapon3"
+            data-info="Better range and immune to gravity, limit=20, can be replenished on killing a Immune Zombie">
+            <img src="./gun3.png" alt="Weapon 2">
+        </div>
+        <div class="weapon" id="bomb">
+            <img src="./bomb.png" alt="bomb">
+        </div>
+    </div>
+    <canvas id="inventory" width="300" height="600"></canvas>
+    <canvas id="gameCanvas" width="1300" height="600"></canvas>
+    <script src="index.js"></script>
+</body>
+
+</html>
