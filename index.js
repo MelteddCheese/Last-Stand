@@ -1905,6 +1905,7 @@ var tilesIndex = 0;
 var timeTaken = 0;
 
 let bb = 0;
+
 function gameLoop() {
     if (!isPaused) {
         timeTaken += 0.0625;
@@ -1969,6 +1970,28 @@ const nameInput = document.getElementById('nameInput');
 var gameOn = false;
 var defenSet = false;
 
+// Image loading mechanism
+const images = [
+    './Walk.png',
+    './walkR.png',
+    './Attack_1.png',
+    './AttackR.png',
+    './walkC.png',
+    './RwalkC.png',
+    './gun11.png',
+    './gun2.png',
+    './gun3.png',
+    './ImmuneZombie.png',
+    './spriteStandRight.png',
+    './spriteStandLeft.png',
+    './spriteRunRight.png',
+    './spriteRunLeft.png',
+    './bomb.png'
+];
+
+let loadedImages = 0;
+const totalImages = images.length;
+
 function startGame() {
     const playerName = nameInput.value.trim();
     if (playerName) {
@@ -1976,13 +1999,22 @@ function startGame() {
         console.log('Game started with player:', playerName);
         isPaused = false;
         gameOn = true;
-        zombieImageR.onload = () => {
-            zombieImage.onload = () => {
-                playerSR.onload = () => {
+        images.forEach(src => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                loadedImages++;
+                if (loadedImages === totalImages) {
+                    console.log('All images loaded, starting game loop.');
                     gameLoop();
                 }
-            }
-        }
+            };
+            img.onerror = () => {
+                console.error(`Failed to load image: ${src}`);
+            };
+        });
+
+        //gameLoop();
         nameInputContainer.style.display = 'none';
         getPlatformWithMinXAndMinY(platforms).defensive = true;
         defenSet = true;
