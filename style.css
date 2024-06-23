@@ -101,8 +101,8 @@ body {
 
 .container {
     position: absolute;
-    left: 15%;
-    top: 25%;
+    left: 10%;
+    top: 15%;
     transform: translateX(-100%);
     display: flex;
     flex-direction: column;
@@ -113,6 +113,60 @@ body {
     width: 100px;
     height: 100px;
     border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    background-color: aqua;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    /* Position it if needed */
+    /* bottom: 20px; */
+    /* Adjust the position */
+    /* right: 20px; */
+    /* Adjust the position */
+}
+
+#weapon1 {
+    background-image: url('./gun11.png');
+}
+
+#weapon2 {
+    background-image: url('./gun2.png');
+}
+
+#weapon3 {
+    background-image: url('./gun3.png');
+}
+
+#bomb {
+    background-image: url('./bomb.png');
+}
+
+.weapon:hover::after {
+    content: attr(data-info);
+    position: absolute;
+    top: -10px;
+    /* Adjust as needed */
+    left: 110%;
+    /* Adjust as needed */
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 10;
+    transform: translateX(0%);
+}
+
+/* .weapon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
     border: 5px solid #fff;
     display: flex;
     justify-content: center;
@@ -120,10 +174,9 @@ body {
     cursor: pointer;
     background-color: #ed6060;
     position: relative;
-    /* visibility: hidden; */
-}
+} */
 
-.weapon img {
+/* .weapon img {
     max-width: 85%;
     max-height: 85%;
 }
@@ -137,7 +190,7 @@ body {
     content: attr(data-info);
     position: absolute;
     bottom: 110%;
-    /* Position above the weapon image */
+    Position above the weapon image 
     left: 50%;
     transform: translateX(-50%);
     background-color: rgba(0, 0, 0, 0.7);
@@ -147,7 +200,7 @@ body {
     white-space: nowrap;
     font-size: 20px;
     z-index: 1;
-}
+} */
 
 #controls {
     display: flex;

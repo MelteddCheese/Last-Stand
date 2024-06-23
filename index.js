@@ -5,12 +5,12 @@ const gameAreaCtx = canvas.getContext('2d');
 
 const ctx = canvas.getContext('2d');
 const gravity = 0.2;
-const groundLevel = canvas.height;
+const groundLevel = canvas.height - 30;
 let platforms = [];
 let traps = [];
 let MinesPlaced = [];
 
-const blockSize = 60;
+const blockSize = 80;
 let blocks = [];
 let blanks = [];
 const blankWidth = 50;
@@ -86,6 +86,7 @@ function drawInventory() {
 
 function drawGameArea() {
     gameAreaCtx.clearRect(0, 0, canvas.width, canvas.height);
+    gameAreaCtx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
     setupBlocks.forEach(Block => {
         gameAreaCtx.fillStyle = Block.color;
         gameAreaCtx.fillRect(Block.x, Block.y, Block.width, Block.height);
@@ -205,8 +206,8 @@ document.addEventListener('mouseup', (e) => {
         draggingBlock.y = e.clientY - canvasRect.top - offsetY;
 
         draggingBlock.x = Math.max(0, Math.min(draggingBlock.x, canvas.width - blockSize));
-        const groundHeight = canvas.height - blockSize;
-        const upperHeight = canvas.height - 2 * blockSize;
+        const groundHeight = groundLevel - blockSize;
+        const upperHeight = groundLevel - 2 * blockSize;
 
         let blockAtGround = setupBlocks.some(block => block.y === groundHeight &&
             ((block.x >= draggingBlock.x && draggingBlock.x + blockSize >= block.x) ||
@@ -252,7 +253,7 @@ document.addEventListener('mouseup', (e) => {
         draggingBlank.y = e.clientY - canvasRect.top - offsetY;
 
         draggingBlank.x = Math.max(0, Math.min(draggingBlank.x, canvas.width - blankWidth));
-        draggingBlank.y = canvas.height - blankHeight;
+        draggingBlank.y = groundLevel - blankHeight;
 
         setupBlanks[setupBlanks.length - 1].x = draggingBlank.x;
         setupBlanks[setupBlanks.length - 1].y = draggingBlank.y;
@@ -277,7 +278,7 @@ document.addEventListener('mouseup', (e) => {
 
         // Prevent Bombs from being placed outside the game area
         draggingBomb.x = Math.max(0, Math.min(draggingBomb.x, canvas.width - minesWidth));
-        draggingBomb.y = canvas.height - minesHeight;
+        draggingBomb.y = groundLevel - minesHeight;
         console.log(draggingBomb.x, draggingBomb.y);
 
         setupBombs[setupBombs.length - 1].x = draggingBomb.x;
@@ -299,12 +300,10 @@ document.addEventListener('mouseup', (e) => {
     }
 });
 
-// drawInventory();
-
 let zombies = [];
 let zombiesR = [];
-const zombieSpeed = 0.5;//moves by 2 per loop
-const zombieSize = 150;
+let zombieSpeed = 0.5;//moves by 2 per loop
+const zombieSize = 200;
 let isPaused = true;
 let score = 0;
 let playerHistory = [];
@@ -330,6 +329,14 @@ var gun3 = new Image();
 gun3.src = './gun3.png';
 var IzombieImage = new Image()
 IzombieImage.src = './ImmuneZombie.png';
+var playerSR = new Image();
+playerSR.src = './spriteStandRight.png';
+var playerSL = new Image();
+playerSL.src = './spriteStandLeft.png';
+var playerRR = new Image();
+playerRR.src = './spriteRunRight.png';
+var playerRL = new Image();
+playerRL.src = './spriteRunLeft.png';
 var bomb = new Image();
 bomb.src = './bomb.png';
 bomb.onload = () => {
@@ -343,7 +350,7 @@ function getPlatformWithMaxXAndMinY(platforms) {
     platforms.sort((a, b) => b.x - a.x);
 
     return platforms.reduce((bestPlatform, currentPlatform) => {
-        if (Math.abs(currentPlatform.x - bestPlatform.x) <= 60 && currentPlatform.y < bestPlatform.y) {
+        if (Math.abs(currentPlatform.x - bestPlatform.x) <= blockSize && currentPlatform.y < bestPlatform.y) {
             return currentPlatform;
         }
         return bestPlatform;
@@ -357,7 +364,7 @@ function getPlatformWithMinXAndMinY(platforms) {
     platforms.sort((a, b) => a.x - b.x);
 
     return platforms.reduce((bestPlatform, currentPlatform) => {
-        if (Math.abs(currentPlatform.x - bestPlatform.x) <= 60 && currentPlatform.y < bestPlatform.y) {
+        if (Math.abs(currentPlatform.x - bestPlatform.x) <= blockSize && currentPlatform.y < bestPlatform.y) {
             return currentPlatform;
         }
         return bestPlatform;
@@ -414,8 +421,7 @@ class ImmuneZombie {
     checkCollisionWithPlayer() {
         if (
             this.x + this.size > player.x &&
-            this.x < player.x + player.width
-            // this.y + this.size < player.y + player.height / 2
+            this.x < player.x + player.width && player.y + player.height / 2 >= this.y
         ) {
             player.attack++;
             this.isMoving = false;
@@ -473,7 +479,7 @@ class Zombie {
 
         let count = 0;
         platforms.forEach(platform => {
-            if (platform.x < canvas.width / 2) {
+            if (platform.x < player.x) {
                 count++;
             }
         });
@@ -511,7 +517,7 @@ class Zombie {
             }
 
             // Attack player if in range
-            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2) {
+            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
                 player.attack++;
                 canMove = false;
             }
@@ -533,7 +539,7 @@ class Zombie {
                     }
                 });
             }
-            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2) {
+            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
                 canMove = false;
                 devL = true;
                 player.attack++;
@@ -605,7 +611,7 @@ class ZombieR {
 
         let count = 0;
         platforms.forEach(platform => {
-            if (platform.x > canvas.width / 2) {
+            if (platform.x > player.x) {
                 count++;
             }
         });
@@ -637,7 +643,7 @@ class ZombieR {
             }
 
             // Attack player if in range
-            if (this.x <= player.x + player.width / 2 && this.x + this.size >= player.x - player.width / 2) {
+            if (this.x <= player.x + player.width / 2 && this.x + this.size >= player.x - player.width / 2 && player.y + player.height / 2 >= this.y) {
                 canMove = false;
                 player.attack++;
             }
@@ -659,7 +665,7 @@ class ZombieR {
                     }
                 });
             }
-            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2) {
+            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
                 canMove = false;
                 dev = true;
                 player.attack++;
@@ -689,10 +695,15 @@ class ClimberZombie {
     constructor(x, y, speed) {
         this.x = x;
         this.y = y;
-        this.size = zombieSize;
+        this.size = zombieSize / 1.5;
         this.speed = speed;
         this.climbSpeed = speed / 2; // Adjust climb speed as needed
         this.image = walkc;
+        this.width = zombieSize * 4 / 9;
+        this.height = zombieSize / 3;
+        this.leftX = x + (zombieSize / 4);
+        this.leftY = y + zombieSize / 1.5;
+        this.level = 0;
 
         this.frameIndex = 0; // Start at the first frame
         this.frameCount = 10; // Total number of frames in the sprite sheet
@@ -713,7 +724,10 @@ class ClimberZombie {
             frameX = this.frameWidth * Math.floor(this.frameIndex);
         }
         ctx.drawImage(this.image, frameX, 0,
-            this.frameWidth, this.frameHeight, this.x, this.y, this.size, this.size);
+            this.frameWidth, this.frameHeight, this.x, this.y, this.size * 1.5, this.size * 1.5);
+        ctx.beginPath();
+        ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
+        ctx.stroke();
     }
 
     update() {
@@ -745,14 +759,90 @@ class ClimberZombie {
 
     walk() {
         let flag = true;
-
-        if (this.y + this.size < canvas.height) {
+        if (this.level == 0) {
             platforms.forEach(platform => {
-                // console.log(platform.x + platform.width);
-                // console.log(this.y + this.size);
-                // console.log(platform.y);
-                // console.log("  ");
-                if (platform.y - (this.y + this.size) < 1 && this.x >= platform.x + platform.width) {
+                if (this.isNearPlatform(platform)) {
+                    if (platform.y == groundLevel - blockSize) {
+                        flag = false;
+                        this.isMoving = true;
+                        this.isClimbingUp = true;
+                        this.platformsCrossed.push(platform);
+                    }
+                    else {
+                        flag = false;
+                        this.isMoving = false;
+                    }
+                }
+            });
+
+            if (flag) {
+                this.isMoving = true;
+                this.x += this.speed;
+                this.leftX += this.speed;
+            }
+        }
+
+        else if (groundLevel - (this.leftY + this.height) > 1) {
+            //console.log(this.platformsCrossed);
+            platforms.forEach(platform => {
+                if (platform.y - (this.leftY + this.height) < 1 && this.leftX >= platform.x + platform.width) {
+                    if (this.platformsCrossed.length > 0) {
+                        if (platform == this.platformsCrossed[this.platformsCrossed.length - 1]) {
+                            this.climbDown = true;
+                        }
+                    }
+                }
+            });
+            if (!this.climbDown) {
+                platforms.forEach(platform => {
+                    if (this.isNearPlatform(platform)) {
+                        if (platform.y == groundLevel - (2 * blockSize) && this.level == 1) {
+                            flag = false;
+                            this.isClimbingUp = true;
+                            this.platformsCrossed.push(platform);
+                        }
+                    }
+                });
+                if (flag) {
+                    this.x += this.speed;
+                    this.leftX += this.speed;
+                }
+            }
+        }
+    }
+
+    climb() {
+        this.y -= this.climbSpeed; // Move up
+        this.leftY -= this.climbSpeed;
+
+        // Check if zombie has reached the top of the platform
+        if (this.level == 1) {
+            if (this.leftY + this.height <= (groundLevel - (2 * blockSize))) {
+                this.isClimbingUp = false;
+                this.level = 2;
+            }
+        }
+        else if (this.level == 0) {
+            if (this.leftY + this.height <= groundLevel - blockSize) {
+                this.isClimbingUp = false;
+                this.level = 1;
+            }
+        }
+    }
+
+    down() {
+        this.y += this.climbSpeed;
+        this.leftY += this.climbSpeed;
+        if (this.leftY + this.height >= groundLevel) {
+            this.level = 0;
+            this.climbDown = false;
+            console.log(this.climbDown);
+        }
+        if (this.level == 2) {
+            if (this.hasReachedDown(this.platformsCrossed[this.platformsCrossed.length - 1])) {
+                this.climbDown = false;
+                this.level = 1;
+                platforms.forEach(platform => {
                     let k = 0;
                     if (this.platformsCrossed.length > 0) {
                         this.platformsCrossed.forEach(crossed => {
@@ -760,123 +850,46 @@ class ClimberZombie {
                                 k++;
                             }
                         });
-                        console.log(k);
                     }
                     if (k == 0) {
-                        this.platformsCrossed.push(platform);
-                        this.climbDown = true;
-                        console.log("acc");
-                    }
-                }
-            });
-
-            if (!this.climbDown) {
-                //console.log("bruhh");
-                platforms.forEach(platform => {
-                    if (this.isNearPlatform(platform)) {
-                        //console.log(this.x + this.size);
-                        //console.log(platform.x);
-                        flag = false;
-                        this.isClimbingUp = true;
-                    }
-                });
-
-                if (flag) {
-                    this.x += this.speed;
-                }
-            }
-
-            // platforms.forEach(platform => {
-            //     console.log("mm");
-            //     if (this.x >= canvas.width / 2 - 40) {
-            //         this.climbDown = true;
-            //         console.log("acc");
-            //     }
-            // });
-        }
-
-        else {
-            console.log("aha");
-            platforms.forEach(platform => {
-                if (this.isNearPlatform(platform)) {
-                    if (platform.y == groundLevel - 60) {
-                        console.log(this.x + this.size);
-                        console.log(platform.x);
-                        flag = false;
-                        this.isClimbingUp = true;
+                        if (platform.y == groundLevel - blockSize && platform.x - (this.leftX + this.width) < this.width / 2) {
+                            this.platformsCrossed.push(platform);
+                        }
                     }
                     else {
-                        this.isMoving = false;
+                        this.climbdown = true;
+                        this.level = 1;
                     }
-                }
-            });
-
-            if (flag) {
-                this.x += this.speed;
+                });
             }
-            //console.log(onPlatform);
         }
-    }
-
-    climb() {
-        this.y -= this.climbSpeed; // Move up
-
-        // Check if zombie has reached the top of the platform
-        let num = 0;
-        platforms.forEach(platform => {
-            if (platform.x < player.x) {
-                num++;
+        else if (this.level == 1) {
+            if (this.y + this.size >= groundLevel) {
+                this.climbDown = false;
+                this.level = 0;
             }
-        })
-        if (num == 0) {
-            this.isClimbingUp = false;
-        }
-        platforms.forEach(platform => {
-            if (this.hasReachedTop(platform)) {
-                this.isClimbingUp = false;
-            }
-        });
-    }
-
-    down() {
-        this.y += this.climbSpeed;
-        // platforms.forEach(platform => {
-        //     if (this.hasReachedDown(platform)) {
-        //         this.climbDown = false;
-        //         console.log("platform");
-        //     }
-        // });
-
-        if (this.y + this.size >= canvas.height) {
-            this.climbDown = false;
-
         }
     }
 
     isNearPlatform(platform) {
         return (
-            this.x + this.size > platform.x &&
-            this.x < platform.x + platform.width &&
-            this.y + this.size >= platform.y &&
-            this.y < platform.y + platform.height
+            this.leftX + this.width > platform.x &&
+            this.leftX < platform.x + platform.width
         );
     }
 
     hasReachedTop(platform) {
-        return this.y <= platform.y - this.size;
+        return this.leftY <= platform.y - this.height;
     }
 
     hasReachedDown(platform) {
-        console.log(this.y + this.size);
-        console.log(platform.y);
-        return this.y + this.size > platform.y;
+        return this.leftY + this.size > platform.y;
     }
 
     checkCollisionWithPlayer() {
         if (
             this.x + this.size > player.x &&
-            this.x < player.x + player.width &&
-            this.y + this.size < player.y + player.height / 2
+            this.x < player.x + player.width && player.y + player.height / 2 >= this.y
         ) {
             player.attack++;
             this.isMoving = false;
@@ -887,14 +900,214 @@ class ClimberZombie {
     }
 }
 
+// class ClimberZombieR {
+//     constructor(x, y, speed) {
+//         this.x = x;
+//         this.y = y;
+//         this.size = zombieSize / 1.5;
+//         this.speed = speed;
+//         this.climbSpeed = -speed / 2; // Adjust climb speed as needed
+//         this.image = Rwalkc;
+//         this.width = zombieSize * 4 / 9;
+//         this.height = zombieSize / 3;
+//         this.leftX = x + (zombieSize / 4);
+//         this.leftY = y + zombieSize / 1.5;
+//         this.level = 0;
+
+//         this.frameIndex = 0; // Start at the first frame
+//         this.frameCount = 10; // Total number of frames in the sprite sheet
+//         this.frameWidth = 96; // Width of each frame
+//         this.frameHeight = 96; // Height of each frame
+
+//         this.isClimbingUp = false;
+//         this.isMoving = true;
+//         this.climbDown = false;
+//         this.platformsCrossed = [];
+//     }
+
+//     draw() {
+//         let frameX;
+//         if (Number.isInteger(this.frameIndex)) {
+//             frameX = this.frameIndex * this.frameWidth;
+//         } else {
+//             frameX = this.frameWidth * Math.floor(this.frameIndex);
+//         }
+//         ctx.drawImage(this.image, frameX, 0,
+//             this.frameWidth, this.frameHeight, this.x, this.y, this.size * 1.5, this.size * 1.5);
+//         ctx.beginPath();
+//         ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
+//         ctx.stroke();
+//     }
+
+//     update() {
+//         this.checkCollisionWithPlayer();
+//         if (this.isMoving) {
+//             this.move();
+//         }
+//         this.frameIndex += 0.25;
+//         if (this.frameIndex >= this.frameCount) {
+//             this.frameIndex = 0;
+//         }
+//         if (this.x > canvas.width) {
+//             this.x = -this.size;
+//             this.y = canvas.height - this.size;
+//         }
+//     }
+
+//     move() {
+//         if (this.isClimbingUp) {
+//             this.climb();
+//         }
+//         else if (this.climbDown) {
+//             this.down()
+//         }
+//         else {
+//             this.walk();
+//         }
+//     }
+
+//     walk() {
+//         let flag = true;
+
+//         if (this.y + this.size < canvas.height) {
+//             platforms.forEach(platform => {
+//                 if (platform.y - (this.y + this.size) < 1 && this.x + this.size <= platform.x) {
+//                     let k = 0;
+//                     if (this.platformsCrossed.length > 0) {
+//                         this.platformsCrossed.forEach(crossed => {
+//                             if (platform == crossed) {
+//                                 k++;
+//                             }
+//                         });
+//                         console.log(k);
+//                     }
+//                     if (k == 0) {
+//                         this.platformsCrossed.push(platform);
+//                         this.climbDown = true;
+//                         console.log("acc");
+//                     }
+//                 }
+//             });
+
+//             if (!this.climbDown) {
+//                 platforms.forEach(platform => {
+//                     if (this.isNearPlatform(platform)) {
+//                         flag = false;
+//                         this.isClimbingUp = true;
+//                     }
+//                 });
+
+//                 if (flag) {
+//                     this.x += this.speed;
+//                 }
+//             }
+
+//         }
+
+//         else {
+//             platforms.forEach(platform => {
+//                 if (this.isNearPlatform(platform)) {
+//                     if (platform.y == groundLevel - 60) {
+//                         console.log(this.x + this.size);
+//                         console.log(platform.x);
+//                         flag = false;
+//                         this.isClimbingUp = true;
+//                     }
+//                     else {
+//                         this.isMoving = false;
+//                     }
+//                 }
+//             });
+
+//             if (flag) {
+//                 this.x += this.speed;
+//             }
+//             //console.log(onPlatform);
+//         }
+//     }
+
+//     climb() {
+//         this.y -= this.climbSpeed; // Move up
+
+//         let num = 0;
+//         platforms.forEach(platform => {
+//             if (platform.x > player.x) {
+//                 num++;
+//             }
+//         })
+//         if (num == 0) {
+//             this.isClimbingUp = false;
+//         }
+
+//         // Check if zombie has reached the top of the platform
+//         platforms.forEach(platform => {
+//             if (this.hasReachedTop(platform)) {
+//                 this.isClimbingUp = false;
+//             }
+//         });
+//     }
+
+//     down() {
+//         this.y += this.climbSpeed;
+//         // platforms.forEach(platform => {
+//         //     if (this.hasReachedDown(platform)) {
+//         //         this.climbDown = false;
+//         //         console.log("platform");
+//         //     }
+//         // });
+//         if (this.y + this.size >= canvas.height) {
+//             this.climbDown = false;
+
+//         }
+//     }
+
+//     isNearPlatform(platform) {
+//         return (
+//             // this.x + this.size > platform.x &&
+//             this.x < platform.x + platform.width &&
+//             this.y + this.size >= platform.y &&
+//             this.y < platform.y + platform.height
+//         );
+//     }
+
+//     hasReachedTop(platform) {
+//         return this.y <= platform.y - this.size;
+//     }
+
+//     hasReachedDown(platform) {
+//         console.log(this.y + this.size);
+//         console.log(platform.y);
+//         return this.y + this.size > platform.y;
+//     }
+
+//     checkCollisionWithPlayer() {
+//         if (
+//             // this.x + this.size > player.x &&
+//             this.x < player.x + player.width / 2 &&
+//             this.y + this.size >= player.y && player.y + player.height / 2 >= this.y
+//         ) {
+//             player.attack++;
+//             this.isMoving = false;
+//         }
+//         else {
+//             this.isMoving = true;
+//         }
+//     }
+// }
+
 class ClimberZombieR {
     constructor(x, y, speed) {
         this.x = x;
         this.y = y;
-        this.size = zombieSize;
+        this.size = zombieSize / 1.5;
         this.speed = speed;
         this.climbSpeed = -speed / 2; // Adjust climb speed as needed
         this.image = Rwalkc;
+        this.width = zombieSize * 4 / 9;
+        this.height = zombieSize / 3;
+        this.leftX = x + (zombieSize / 4);
+        this.leftY = y + zombieSize / 1.5;
+        this.level = 0;
 
         this.frameIndex = 0; // Start at the first frame
         this.frameCount = 10; // Total number of frames in the sprite sheet
@@ -915,7 +1128,10 @@ class ClimberZombieR {
             frameX = this.frameWidth * Math.floor(this.frameIndex);
         }
         ctx.drawImage(this.image, frameX, 0,
-            this.frameWidth, this.frameHeight, this.x, this.y, this.size, this.size);
+            this.frameWidth, this.frameHeight, this.x, this.y, this.size * 1.5, this.size * 1.5);
+        ctx.beginPath();
+        ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
+        ctx.stroke();
     }
 
     update() {
@@ -947,10 +1163,87 @@ class ClimberZombieR {
 
     walk() {
         let flag = true;
-
-        if (this.y + this.size < canvas.height) {
+        if (this.level == 0) {
             platforms.forEach(platform => {
-                if (platform.y - (this.y + this.size) < 1 && this.x + this.size <= platform.x) {
+                if (this.isNearPlatform(platform)) {
+                    if (platform.y == groundLevel - blockSize) {
+                        flag = false;
+                        this.isMoving = true;
+                        this.isClimbingUp = true;
+                        this.platformsCrossed.push(platform);
+                    }
+                    else {
+                        flag = false;
+                        this.isMoving = false;
+                    }
+                }
+            });
+            if (flag) {
+                this.isMoving = true;
+                this.x += this.speed;
+                this.leftX += this.speed;
+            }
+        }
+        else if (groundLevel - (this.leftY + this.height) > 1) {
+            //console.log(this.platformsCrossed);
+            platforms.forEach(platform => {
+                if (platform.y - (this.leftY + this.height) < 1 && this.leftX + this.width <= platform.x) {
+                    if (this.platformsCrossed.length > 0) {
+                        if (platform == this.platformsCrossed[this.platformsCrossed.length - 1]) {
+                            this.climbDown = true;
+                        }
+                    }
+                }
+            });
+            if (!this.climbDown) {
+                platforms.forEach(platform => {
+                    if (this.isNearPlatform(platform)) {
+                        if (platform.y == groundLevel - (2 * blockSize) && this.level == 1) {
+                            flag = false;
+                            this.isClimbingUp = true;
+                            this.platformsCrossed.push(platform);
+                        }
+                    }
+                });
+                if (flag) {
+                    this.x += this.speed;
+                    this.leftX += this.speed;
+                }
+            }
+        }
+    }
+
+    climb() {
+        this.y -= this.climbSpeed; // Move up
+        this.leftY -= this.climbSpeed;
+
+        if (this.level == 1) {
+            if (this.leftY + this.height <= (groundLevel - (2 * blockSize))) {
+                this.isClimbingUp = false;
+                this.level = 2;
+            }
+        }
+        else if (this.level == 0) {
+            if (this.leftY + this.height <= groundLevel - blockSize) {
+                this.isClimbingUp = false;
+                this.level = 1;
+            }
+        }
+    }
+
+    down() {
+        this.y += this.climbSpeed;
+        this.leftY += this.climbSpeed;
+        if (this.leftY + this.height >= groundLevel) {
+            this.level = 0;
+            this.climbDown = false;
+            console.log(this.climbDown);
+        }
+        if (this.level == 2) {
+            if (this.hasReachedDown(this.platformsCrossed[this.platformsCrossed.length - 1])) {
+                this.climbDown = false;
+                this.level = 1;
+                platforms.forEach(platform => {
                     let k = 0;
                     if (this.platformsCrossed.length > 0) {
                         this.platformsCrossed.forEach(crossed => {
@@ -958,94 +1251,31 @@ class ClimberZombieR {
                                 k++;
                             }
                         });
-                        console.log(k);
                     }
                     if (k == 0) {
-                        this.platformsCrossed.push(platform);
-                        this.climbDown = true;
-                        console.log("acc");
-                    }
-                }
-            });
-
-            if (!this.climbDown) {
-                platforms.forEach(platform => {
-                    if (this.isNearPlatform(platform)) {
-                        flag = false;
-                        this.isClimbingUp = true;
-                    }
-                });
-
-                if (flag) {
-                    this.x += this.speed;
-                }
-            }
-
-        }
-
-        else {
-            platforms.forEach(platform => {
-                if (this.isNearPlatform(platform)) {
-                    if (platform.y == groundLevel - 60) {
-                        console.log(this.x + this.size);
-                        console.log(platform.x);
-                        flag = false;
-                        this.isClimbingUp = true;
+                        if (platform.y == groundLevel - blockSize && platform.x + platform.width - (this.leftX) < this.width / 2) {
+                            this.platformsCrossed.push(platform);
+                        }
                     }
                     else {
-                        this.isMoving = false;
+                        this.climbdown = true;
+                        this.level = 1;
                     }
-                }
-            });
-
-            if (flag) {
-                this.x += this.speed;
+                });
             }
-            //console.log(onPlatform);
         }
-    }
-
-    climb() {
-        this.y -= this.climbSpeed; // Move up
-
-        let num = 0;
-        platforms.forEach(platform => {
-            if (platform.x > player.x) {
-                num++;
+        else if (this.level == 1) {
+            if (this.y + this.size >= groundLevel) {
+                this.climbDown = false;
+                this.level = 0;
             }
-        })
-        if (num == 0) {
-            this.isClimbingUp = false;
-        }
-
-        // Check if zombie has reached the top of the platform
-        platforms.forEach(platform => {
-            if (this.hasReachedTop(platform)) {
-                this.isClimbingUp = false;
-            }
-        });
-    }
-
-    down() {
-        this.y += this.climbSpeed;
-        // platforms.forEach(platform => {
-        //     if (this.hasReachedDown(platform)) {
-        //         this.climbDown = false;
-        //         console.log("platform");
-        //     }
-        // });
-        if (this.y + this.size >= canvas.height) {
-            this.climbDown = false;
-
         }
     }
 
     isNearPlatform(platform) {
         return (
-            // this.x + this.size > platform.x &&
-            this.x < platform.x + platform.width &&
-            this.y + this.size >= platform.y &&
-            this.y < platform.y + platform.height
+            this.leftX + this.width > platform.x &&
+            this.leftX < platform.x + platform.width
         );
     }
 
@@ -1063,8 +1293,7 @@ class ClimberZombieR {
         if (
             // this.x + this.size > player.x &&
             this.x < player.x + player.width / 2 &&
-            this.y + this.size >= player.y &&
-            this.y < player.y + player.height / 2
+            this.y + this.size >= player.y && player.y + player.height / 2 >= this.y
         ) {
             player.attack++;
             this.isMoving = false;
@@ -1077,25 +1306,26 @@ class ClimberZombieR {
 
 let ClimberZombies = [];
 function createZombie() {
-    const y = canvas.height - 150;
+    const y = groundLevel - zombieSize;
     const zombie1 = new Zombie(0, y, zombieSpeed);
     zombies.push(zombie1);
     //zombies = zombies.filter
-    if (zombies.length > 4) {
+    if (zombies.length > 10) {
         zombies = zombies.filter(zombie => zombie.x > 0 && zombie.x < canvas.width);
     }
 }
+
 function createZombieR() {
-    const y = canvas.height - 150;
+    const y = groundLevel - zombieSize;
     const zombie2 = new ZombieR(canvas.width - zombieSize, y, -zombieSpeed);
     zombiesR.push(zombie2);
-    if (zombiesR.length > 3) {
+    if (zombiesR.length > 10) {
         zombiesR = zombiesR.filter(zombieR => zombieR.x > 0 && zombieR.x < canvas.width - zombieSize);
     }
 }
 
 function createClimber() {
-    const y = canvas.height - 150;
+    const y = groundLevel - zombieSize;
     const zombie1 = new ClimberZombie(0, y, zombieSpeed);
     ClimberZombies.push(zombie1);
     const zombie2 = new ClimberZombieR(canvas.width - zombieSize, y, -zombieSpeed);
@@ -1103,7 +1333,7 @@ function createClimber() {
 }
 
 function createImmuneZombie() {
-    const y = canvas.height - 150;
+    const y = groundLevel - zombieSize;
     const zombie1 = new ImmuneZombie(0, y, zombieSpeed * 2);
     ImmuneZombies.push(zombie1);
 }
@@ -1122,6 +1352,244 @@ function drawZombies() {
     ImmuneZombies.forEach(zombie => zombie.draw());
 }
 
+// class Player {
+//     constructor(x, y, width, height, speed) {
+//         this.x = x;
+//         this.y = y;
+//         this.width = width;
+//         this.height = height;
+//         this.speed = speed;
+//         this.velX = 0;
+//         this.velY = 0;
+//         this.isJumping = false;
+//         this.isGrounded = true;
+//         this.maxHealth = 1000;
+//         this.attack = 0;
+//         this.weapon = 1;
+//         this.gunImage = gun1;
+//         this.recoil = 0;
+//         this.recoilDuration = 5;
+//         this.image = playerSR;
+//     }
+
+//     moveLeft() {
+//         this.velX = -this.speed;
+//     }
+
+//     moveRight() {
+//         this.velX = this.speed;
+//     }
+
+//     jump() {
+//         if (this.isGrounded) {
+//             this.velY = -15; // Jump strength
+//             this.isJumping = true;
+//             this.isGrounded = false;
+//         }
+//     }
+
+//     update() {
+//         if (!jetpackActive) {
+//             if (this.y + this.height / 2 < groundLevel) {
+//                 if (platforms.length > 0) {
+//                     platforms.forEach(platform => {
+//                         // Simple collision detection for platforms
+//                         if (!(player.y + player.height / 2 <= platform.y && player.y + player.height / 2 + player.velY >= platform.y && player.x + player.width / 2 >= platform.x && player.x - player.width / 2 <= platform.x + platform.width)) {
+//                             this.velY += gravity;
+//                             //console.log("added");
+//                             this.isGrounded = false;
+//                         }
+//                     });
+//                 }
+//                 else {
+//                     this.velY += gravity;
+//                     this.isGrounded = false;
+//                 }
+
+//             } else {
+//                 this.isJumping = false;
+//                 this.isGrounded = true;
+//                 this.y = groundLevel - this.height / 2;
+//             }
+
+//             if (this.y - this.height / 2 <= 0) {
+//                 this.velY = gravity;
+//             }
+//         }
+//         else if (jetpackActive && jetpackUsedTime < jetpackLifetime) {
+//             if (this.y > jetpackMaxHeight) {
+//                 this.y -= jetpackSpeed; // Move the player up
+//                 console.log(this.y);
+//                 jetpackUsedTime += 1000 / 60; // Increment the used time (assuming 60 FPS)
+//             } else {
+//                 jetpackActive = false; // Deactivate the jetpack when max height is reached
+//             }
+//         } else {
+//             if (this.y < playerGroundY) {
+//                 this.y += fallSpeed; // Move the player down if above ground level
+//                 console.log("bruhh");
+//             } else {
+//                 this.y = playerGroundY; // Reset position to ground level
+//                 jetpackActive = false; // Ensure jetpack is deactivated
+//                 jetpackUsedTime = 0; // Reset jetpack used time if needed
+//             }
+//         }
+
+//         platforms.forEach(platform => {
+//             if (player.y + player.height / 2 <= platform.y && player.y + player.height / 2 + player.velY >= platform.y && player.x + player.width / 2 >= platform.x && player.x - player.width / 2 <= platform.x + platform.width) {
+//                 this.velY = 0;
+//             }
+//         });
+
+//         let platformBlock = false;
+
+//         platforms.forEach(platform => {
+//             // Check if moving right
+//             if (this.velX > 0) {
+//                 if (
+//                     this.x + this.width / 2 <= platform.x &&
+//                     this.x + this.width / 2 + this.velX > platform.x && this.y > platform.y - platform.height
+//                 ) {
+//                     platformBlock = true;
+//                 }
+//             }
+//             // Check if moving left
+//             else if (this.velX < 0) {
+//                 if (this.x - this.width / 2 >= platform.x + platform.width &&
+//                     this.x - this.width / 2 + this.velX < platform.x + platform.width && this.y > platform.y - platform.height) {
+//                     platformBlock = true;
+//                     console.log(platform.x);
+//                     console.log(this.x);
+//                     console.log('');
+//                 }
+//             }
+//         });
+
+//         let zombieBlock = false;
+
+//         zombies.forEach(zombie => {
+//             // Check if moving right
+//             if (this.velX > 0) {
+//                 if (
+//                     this.x + this.width / 2 <= zombie.x &&
+//                     this.x + this.width / 2 + this.velX >= zombie.x &&
+//                     this.y + this.height > zombie.y &&
+//                     this.y < zombie.y + zombie.size
+//                 ) {
+//                     zombieBlock = true;
+//                 }
+//             }
+//             // Check if moving left
+//             else if (this.velX < 0) {
+//                 if (
+//                     this.x - this.width / 2 >= zombie.x + zombie.size &&
+//                     this.x - this.width / 2 + this.velX <= zombie.x + zombie.size &&
+//                     this.y + this.height > zombie.y &&
+//                     this.y < zombie.y + zombie.size
+//                 ) {
+//                     zombieBlock = true;
+//                 }
+//             }
+//         });
+
+//         zombiesR.forEach(zombie => {
+//             // Check if moving right
+//             if (this.velX > 0) {
+//                 if (
+//                     this.x + this.width / 2 <= zombie.x &&
+//                     this.x + this.width / 2 + this.velX >= zombie.x &&
+//                     this.y + this.height > zombie.y &&
+//                     this.y < zombie.y + zombie.size
+//                 ) {
+//                     zombieBlock = true;
+//                 }
+//             }
+//             // Check if moving left
+//             else if (this.velX < 0) {
+//                 if (
+//                     this.x - this.width / 2 >= zombie.x + zombie.size &&
+//                     this.x - this.width / 2 + this.velX <= zombie.x + zombie.size &&
+//                     this.y + this.height > zombie.y &&
+//                     this.y < zombie.y + zombie.size
+//                 ) {
+//                     zombieBlock = true;
+//                 }
+//             }
+//         });
+
+//         if (!(platformBlock) && !(zombieBlock)) {
+//             this.x += this.velX;
+//         }
+
+//         if (!jetpackActive) {
+//             this.y += this.velY;
+//         }
+//         // Keep the player within the canvas bounds
+//         if (this.x - this.width / 2 < 0) {
+//             this.x = this.width / 2;
+//         } else if (this.x + this.width / 2 > canvas.width) {
+//             this.x = canvas.width - this.width / 2;
+//         }
+//         if (this.attack >= this.maxHealth) {
+//             // Mark this platform for destruction
+//             playerHistory.push([userName, score]);
+//             let jsonString = JSON.stringify(playerHistory);
+//             localStorage.setItem('Leaderboard', jsonString);
+//             showGameOverScreen();
+//             isPaused = true;
+//             gameOn = false;
+//         }
+//         if (this.recoil > 0) {
+//             this.recoil--;
+//         }
+//     }
+
+//     drawHealthBar(ctx) {
+//         const barWidth = 100;
+//         const barHeight = 10;
+//         const barX = this.x - barWidth / 2;
+//         const barY = this.y - this.height / 2 - 20;
+//         const healthRatio = (this.maxHealth - this.attack) / this.maxHealth;
+//         const filledWidth = barWidth * healthRatio;
+
+//         ctx.fillStyle = 'red';
+//         ctx.fillRect(barX, barY, barWidth, barHeight);
+//         ctx.fillStyle = 'green';
+//         ctx.fillRect(barX, barY, filledWidth, barHeight);
+//         ctx.strokeStyle = 'black';
+//         ctx.strokeRect(barX, barY, barWidth, barHeight);
+//     }
+
+//     draw(ctx) {
+//         ctx.fillStyle = 'blue';
+//         ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+//         ctx.drawImage(this.x - this.width / 2, this.y - this.height / 2,)
+//         this.drawHealthBar(ctx);
+//         // Draw the gun
+//         const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
+//         const gunLength = 70;
+//         const gunWidth = 60;
+//         if (this.weapon == 1) {
+//             this.gunImage = gun1;
+//         }
+//         else if (this.weapon == 2) {
+//             this.gunImage = gun2;
+//         }
+//         else if (this.weapon == 3) {
+//             this.gunImage = gun3;
+//         }
+//         ctx.save();
+//         ctx.translate(this.x, this.y);
+//         ctx.rotate(angle);
+//         // ctx.fillStyle = 'black';
+//         // ctx.fillRect(0, -gunWidth / 2, gunLength, gunWidth);
+//         const recoilOffset = this.recoil > 0 ? -10 : 0;
+//         ctx.drawImage(this.gunImage, recoilOffset, -gunWidth / 2, gunLength, gunWidth);
+//         // ctx.drawImage(this.gunImage, 0, -gunWidth / 2, gunLength, gunWidth);
+//         ctx.restore();
+//     }
+// }
+
 class Player {
     constructor(x, y, width, height, speed) {
         this.x = x;
@@ -1139,6 +1607,12 @@ class Player {
         this.gunImage = gun1;
         this.recoil = 0;
         this.recoilDuration = 5;
+        this.image = playerSR;
+
+        this.frameIndex = 0;
+        this.frameCount = 40;
+        this.frameWidth = 177;
+        this.frameHeight = 400;
     }
 
     moveLeft() {
@@ -1151,37 +1625,61 @@ class Player {
 
     jump() {
         if (this.isGrounded) {
-            this.velY = -10; // Jump strength
+            this.velY = -20; // Jump strength
             this.isJumping = true;
             this.isGrounded = false;
         }
     }
 
     update() {
-        if (this.y + this.height / 2 < groundLevel) {
-            if (platforms.length > 0) {
-                platforms.forEach(platform => {
-                    // Simple collision detection for platforms
-                    if (!(player.y + player.height / 2 <= platform.y && player.y + player.height / 2 + player.velY >= platform.y && player.x + player.width / 2 >= platform.x && player.x - player.width / 2 <= platform.x + platform.width)) {
-                        this.velY += gravity;
-                        //console.log("added");
-                        this.isGrounded = false;
-                    }
-                });
-            }
-            else {
-                this.velY += gravity;
-                this.isGrounded = false;
-            }
-
-        } else {
-            this.isJumping = false;
-            this.isGrounded = true;
-            this.y = groundLevel - this.height / 2;
+        this.frameIndex++;
+        if (this.frameIndex > this.frameCount) {
+            this.frameIndex = 0;
         }
+        if (!jetpackActive) {
+            if (this.y + this.height / 2 < groundLevel) {
+                if (platforms.length > 0) {
+                    platforms.forEach(platform => {
+                        // Simple collision detection for platforms
+                        if (!(player.y + player.height / 2 <= platform.y && player.y + player.height / 2 + player.velY >= platform.y && player.x + player.width / 2 >= platform.x && player.x - player.width / 2 <= platform.x + platform.width)) {
+                            this.velY += gravity;
+                            //console.log("added");
+                            this.isGrounded = false;
+                        }
+                    });
+                }
+                else {
+                    this.velY += gravity;
+                    this.isGrounded = false;
+                }
 
-        if (this.y - this.height / 2 <= 0) {
-            this.velY = gravity;
+            } else {
+                this.isJumping = false;
+                this.isGrounded = true;
+                this.y = groundLevel - this.height / 2;
+            }
+
+            if (this.y - this.height / 2 <= 0) {
+                this.velY = gravity;
+            }
+        }
+        else if (jetpackActive && jetpackUsedTime < jetpackLifetime) {
+            if (this.y > jetpackMaxHeight) {
+                this.y -= jetpackSpeed; // Move the player up
+                console.log(this.y);
+                jetpackUsedTime += 1000 / 60; // Increment the used time (assuming 60 FPS)
+            } else {
+                jetpackActive = false; // Deactivate the jetpack when max height is reached
+            }
+        } else {
+            if (this.y < playerGroundY) {
+                this.y += fallSpeed; // Move the player down if above ground level
+                console.log("bruhh");
+            } else {
+                this.y = playerGroundY; // Reset position to ground level
+                jetpackActive = false; // Ensure jetpack is deactivated
+                jetpackUsedTime = 0; // Reset jetpack used time if needed
+            }
         }
 
         platforms.forEach(platform => {
@@ -1270,7 +1768,9 @@ class Player {
             this.x += this.velX;
         }
 
-        this.y += this.velY;
+        if (!jetpackActive) {
+            this.y += this.velY;
+        }
         // Keep the player within the canvas bounds
         if (this.x - this.width / 2 < 0) {
             this.x = this.width / 2;
@@ -1308,8 +1808,9 @@ class Player {
     }
 
     draw(ctx) {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+        let frameX = this.frameWidth * this.frameIndex;
+        ctx.drawImage(this.image, frameX, 0,
+            this.frameWidth, this.frameHeight, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
         this.drawHealthBar(ctx);
         // Draw the gun
         const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
@@ -1327,14 +1828,18 @@ class Player {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(angle);
-        // ctx.fillStyle = 'black';
-        // ctx.fillRect(0, -gunWidth / 2, gunLength, gunWidth);
         const recoilOffset = this.recoil > 0 ? -10 : 0;
         ctx.drawImage(this.gunImage, recoilOffset, -gunWidth / 2, gunLength, gunWidth);
-        // ctx.drawImage(this.gunImage, 0, -gunWidth / 2, gunLength, gunWidth);
         ctx.restore();
     }
 }
+
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !jetpackActive && jetpackUsedTime < jetpackLifetime) {
+        jetpackActive = true;
+        console.log(jetpackActive);
+    }
+});
 
 function showGameOverScreen() {
     const gameOverScreen = document.getElementById('gameOverScreen');
@@ -1349,8 +1854,8 @@ document.addEventListener("DOMContentLoaded", function () {
     pauseButton.addEventListener("click", function () {
         isPaused = true;
         document.getElementById("pausedScreen").style.display = "flex";
-        document.querySelector(".container").style.visibility = 'hidden';
-        console.log(document.querySelector(".container").style.visibility);
+        //document.querySelector(".container").style.visibility = 'hidden';
+        //console.log(document.querySelector(".container").style.visibility);
     });
 });
 
@@ -1367,6 +1872,12 @@ function resetGame() {
     zombies = [];
     zombiesR = [];
     ClimberZombies = [];
+    ImmuneZombies = [];
+    platforms = [];
+    MinesPlaced = [];
+    bgIndex = 0;
+    tilesIndex = 0;
+    zombieSpeed = 0.5;
     player.attack = 0;
     score = 0;
     Bullet2 = 20;
@@ -1374,13 +1885,16 @@ function resetGame() {
     document.getElementById("score").innerText = score;
     dev = false;
     devL = false;
-    platforms = [
-        new Platform(canvas.width / 2 - 100, groundLevel - 60),
-        new Platform(canvas.width / 2 + 50, groundLevel - 60),
-        new Platform(canvas.width / 2 - 120, groundLevel - 120),
-        new Platform(canvas.width / 2 + 80, groundLevel - 120)
-    ];
-    player = new Player(canvas.width / 2, groundLevel, 50, 200, 5);
+    for (let i = 0; i < setupBlocks.length; i++) {
+        platforms.push(new Platform(setupBlocks[i].x, setupBlocks[i].y));
+    }
+    for (let j = 0; j < setupBlanks.length; j++) {
+        traps.push(new trap(setupBlanks[j].x, setupBlanks[j].y));
+    }
+    for (let k = 0; k < setupBombs.length; k++) {
+        MinesPlaced.push(new Miness(setupBombs[k].x, setupBombs[k].y))
+    }
+    player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
 }
 
 var Bullet2 = 20;
@@ -1401,7 +1915,7 @@ class Bullet {
     update() {
         this.x += this.speedX;
         this.y += this.speedY;
-        if (player.weapon == 1 || player.weapon == 2 || !this.automated) {
+        if (player.weapon == 1 || player.weapon == 2 || this.automated) {
             this.speedY += gravity;
         }
         this.path.push({ x: this.x, y: this.y });
@@ -1417,7 +1931,7 @@ class Bullet {
             range = 1;
         }
         if (this.automated) {
-            range = 1;
+            range = 3;
         }
         //collision of bullet and zombies
         for (let i = zombies.length - 1; i >= 0; i--) {
@@ -1522,8 +2036,8 @@ class Platform {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 60; // Adjust platform width as needed
-        this.height = 60; // Adjust platform height as needed
+        this.width = 80; // Adjust platform width as needed
+        this.height = 80; // Adjust platform height as needed
         this.contactTimer = 0; // Time in frames the platform has been in contact with a zombie
         this.destructionTime = 500;
         this.defensive = false;
@@ -1540,9 +2054,9 @@ class Platform {
             ctx.fillStyle = 'black';
             ctx.fillRect(0, -gunWidth / 2, gunLength, gunWidth);
             ctx.restore();
-            if (this.y == canvas.height - blockSize) {
-                this.destructionTime = 200;
-            }
+            // if (this.y == canvas.height - blockSize) {
+            //     this.destructionTime = 200;
+            // }
         }
     }
     update() {
@@ -1551,6 +2065,20 @@ class Platform {
             if (this.defensive) {
                 defenSet = false;
             }
+            ClimberZombies.forEach(zombie => {
+                if (zombie.platformsCrossed[zombie.platformsCrossed.length - 1] == this) {
+                    if (zombie.level == 1) {
+                        zombie.leftY = groundLevel - zombie.height;
+                        zombie.y = groundLevel - zombieSize;
+                        zombie.level = 1;
+                    }
+                    else if (zombie.level == 2) {
+                        zombie.leftY = groundLevel - (blockSize + zombie.height);
+                        zombie.y = groundLevel - 2 * zombieSize;
+                        zombie.level = 0;
+                    }
+                }
+            })
             return true;
         }
         return false;
@@ -1626,17 +2154,17 @@ class Miness {
         }
     }
 }
-//let traps = [new trap(200, groundLevel - 5), new trap(canvas.width - 200, groundLevel - 5)];
-// let platforms = [
-//     new Platform(canvas.width / 2 - 100, groundLevel - 60),
-//     new Platform(canvas.width / 2 + 50, groundLevel - 60),
-//     new Platform(canvas.width / 2 - 120, groundLevel - 120),
-//     new Platform(canvas.width / 2 + 80, groundLevel - 120)
-// ];
 
-let player = new Player(canvas.width / 2, groundLevel, 50, 200, 5);
+let player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
 let bullets = [];
 let mouse = { x: 0, y: 0 };
+const playerGroundY = groundLevel - player.height / 2; // Ground level
+const jetpackLifetime = 5000; // Jetpack active time in milliseconds (e.g., 5 seconds)
+let jetpackUsedTime = 0; // Time the jetpack has been used
+let jetpackActive = false; // Is the jetpack currently active
+const jetpackMaxHeight = 300; // The height the player should reach when jetpack is active
+const jetpackSpeed = 4; // Speed of the jetpack
+const fallSpeed = 2; // Speed at which the player falls down
 
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
@@ -1650,9 +2178,58 @@ canvas.addEventListener('click', () => {
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'a') {
-        player.moveLeft();
+        player.image = playerRL;
+        player.frameWidth = 340;
+        player.width = 127.875;
+        player.frameCount = 20;
+        if (player.x < canvas.width / 3) {
+            if (bgIndex >= -200) {
+                bgIndex -= player.speed * 0.5;
+                tilesIndex -= player.speed * 0.75;
+                platforms.forEach(platform => {
+                    platform.x += player.speed;
+                })
+                traps.forEach(trap => {
+                    trap.x += player.speed;
+                });
+                MinesPlaced.forEach(mine => {
+                    mine.x += player.speed;
+                })
+            }
+            else {
+                player.moveLeft();
+            }
+        }
+        else {
+            player.moveLeft();
+        }
     } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        player.moveRight();
+        player.image = playerRR;
+        player.frameWidth = 340;
+        player.width = 127.875;
+        player.frameCount = 20;
+        if (player.x > 2 * canvas.width / 3) {
+            if (bgIndex <= 200) {
+                bgIndex += player.speed * 0.5;  // Adjust speed for parallax
+                tilesIndex += player.speed * 0.75;  // Adjust speed for parallax
+                platforms.forEach(platform => {
+                    platform.x -= player.speed;
+                });
+                traps.forEach(trap => {
+                    trap.x -= player.speed;
+                });
+                MinesPlaced.forEach(mine => {
+                    mine.x -= player.speed;
+                })
+            }
+            else {
+                player.moveRight();
+            }
+        }
+
+        else {
+            player.moveRight();
+        }
     } else if (e.key === 'ArrowUp' || e.key === 'w') {
         player.jump();
     }
@@ -1661,6 +2238,18 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'ArrowRight' || e.key === 'd') {
         player.velX = 0;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd') {
+        player.image = playerSR;
+        player.frameWidth = 177;
+        player.width = 66;
+        player.frameCount = 40;
+    }
+    else if (e.key === 'ArrowLeft' || e.key === 'a') {
+        player.image = playerSL;
+        player.frameWidth = 177;
+        player.width = 66;
+        player.frameCount = 40;
     }
 });
 
@@ -1723,11 +2312,15 @@ function update() {
 
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, bgIndex, 0, backgroundImage.width, canvas.height, -200, 0, backgroundImage.width, canvas.height);
+    for (let i = -4; i < 1000; i++) {
+        ctx.drawImage(tiles, i * tiles.width - tilesIndex, groundLevel, tiles.width, tiles.height);
+    }
+    bgCheck = true;
     player.draw(ctx);
     platforms.forEach(platform => platform.draw(ctx));
     traps.forEach(trap => trap.draw(ctx));
-    console.log(MinesPlaced);
+    //console.log(MinesPlaced);
     MinesPlaced.forEach(Mine => {
         Mine.draw(ctx);
     })
@@ -1738,15 +2331,24 @@ function render() {
 
 const backgroundImage = new Image();
 backgroundImage.src = './bg.png';
+const tiles = new Image();
+tiles.src = './tiles.png';
+var bgIndex = 0;
+var tilesIndex = 0;
 var timeTaken = 0;
 
+let bb = 0;
 function gameLoop() {
     if (!isPaused) {
         timeTaken += 0.0625;
+        zombieSpeed += 0.0002;
+        if (bgIndex > 873) {
+            bgIndex
+        }
         //render();
         update();
         render();
-        if (Number.isInteger(timeTaken)) {
+        if (Number.isInteger(timeTaken) && timeTaken % 10 == 0) {
             if (defenSet) {
                 shoot(true);
             }
@@ -1762,7 +2364,10 @@ function gameLoop() {
         if (Number.isInteger(timeTaken)) {
             //console.log('entered');
             if (timeTaken % 30 == 0) {
-                createClimber();
+                if (bb == 0) {
+                    createClimber();
+                    bb++;
+                }
             }
             if (timeTaken % 60 == 0) {
                 createImmuneZombie();
@@ -1773,7 +2378,7 @@ function gameLoop() {
                     i++;
                 }
             })
-            if (i == 0 || zombies.length == 0) {
+            if (timeTaken % 10 == 0 && i == 0) {
                 createZombie();
             }
             let j = 0;
@@ -1782,10 +2387,11 @@ function gameLoop() {
                     j++;
                 }
             })
-            if (j == 0 || zombiesR.length == 0) {
+            if (timeTaken % 10 == 0 && j == 0) {
                 createZombieR();
             }
         }
+
         requestAnimationFrame(gameLoop);
     }
 }
@@ -1795,6 +2401,7 @@ const startGameButton = document.getElementById('startGameButton');
 const nameInput = document.getElementById('nameInput');
 var gameOn = false;
 var defenSet = false;
+
 function startGame() {
     const playerName = nameInput.value.trim();
     if (playerName) {
@@ -1806,6 +2413,9 @@ function startGame() {
         nameInputContainer.style.display = 'none';
         getPlatformWithMinXAndMinY(platforms).defensive = true;
         defenSet = true;
+        ctx.save();
+        canvas.width = 2000;
+        ctx.restore();
     } else {
         alert('Please enter your name to start the game.');
     }
@@ -1823,6 +2433,7 @@ window.onload = () => {
     document.querySelector(".container").style.visibility = 'hidden';
     document.getElementById("controls").style.visibility = 'hidden';
     inventoryCanvas.style.display = 'flex';
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 };
 
 document.getElementById('leaderboardButton').addEventListener('click', () => {

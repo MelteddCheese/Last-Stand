@@ -38,7 +38,23 @@
         <button id="startGameButton">Start Game</button>
     </div>
     <div class="container">
-        <div class="weapon" id="weapon1"
+        <button id="weapon1" class="weapon"
+            data-info="Low range, unlimited, shd be targeted on the head of the zombie to destroy it"></button>
+        <button id="weapon2" class="weapon"
+            data-info="Better range, limit=20, can be replenished on killing a Immune Zombie"></button>
+        <button id="weapon3" class="weapon"
+            data-info="Better range and immune to gravity, limit=20, can be replenished on killing a Immune Zombie"></button>
+        <button id="bomb" class="weapon"
+            data-info="Activate Mines: Kills all the zombies on the side not containing the player"></button>
+    </div>
+    <canvas id="inventory" width="250" height="800"></canvas>
+    <canvas id="gameCanvas" width="1700" height="800"></canvas>
+    <script src="index.js"></script>
+</body>
+
+</html>
+
+<!-- <div class="weapon" id="weapon1"
             data-info="Low range, unlimited, should be targeted on the head of the zombie to destroy it">
             <img src="./gun11.png" alt="Weapon 1">
         </div>
@@ -52,11 +68,4 @@
         </div>
         <div class="weapon" id="bomb">
             <img src="./bomb.png" alt="bomb">
-        </div>
-    </div>
-    <canvas id="inventory" width="300" height="600"></canvas>
-    <canvas id="gameCanvas" width="1300" height="600"></canvas>
-    <script src="index.js"></script>
-</body>
-
-</html>
+        </div> -->
