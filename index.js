@@ -900,201 +900,6 @@ class ClimberZombie {
     }
 }
 
-// class ClimberZombieR {
-//     constructor(x, y, speed) {
-//         this.x = x;
-//         this.y = y;
-//         this.size = zombieSize / 1.5;
-//         this.speed = speed;
-//         this.climbSpeed = -speed / 2; // Adjust climb speed as needed
-//         this.image = Rwalkc;
-//         this.width = zombieSize * 4 / 9;
-//         this.height = zombieSize / 3;
-//         this.leftX = x + (zombieSize / 4);
-//         this.leftY = y + zombieSize / 1.5;
-//         this.level = 0;
-
-//         this.frameIndex = 0; // Start at the first frame
-//         this.frameCount = 10; // Total number of frames in the sprite sheet
-//         this.frameWidth = 96; // Width of each frame
-//         this.frameHeight = 96; // Height of each frame
-
-//         this.isClimbingUp = false;
-//         this.isMoving = true;
-//         this.climbDown = false;
-//         this.platformsCrossed = [];
-//     }
-
-//     draw() {
-//         let frameX;
-//         if (Number.isInteger(this.frameIndex)) {
-//             frameX = this.frameIndex * this.frameWidth;
-//         } else {
-//             frameX = this.frameWidth * Math.floor(this.frameIndex);
-//         }
-//         ctx.drawImage(this.image, frameX, 0,
-//             this.frameWidth, this.frameHeight, this.x, this.y, this.size * 1.5, this.size * 1.5);
-//         ctx.beginPath();
-//         ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
-//         ctx.stroke();
-//     }
-
-//     update() {
-//         this.checkCollisionWithPlayer();
-//         if (this.isMoving) {
-//             this.move();
-//         }
-//         this.frameIndex += 0.25;
-//         if (this.frameIndex >= this.frameCount) {
-//             this.frameIndex = 0;
-//         }
-//         if (this.x > canvas.width) {
-//             this.x = -this.size;
-//             this.y = canvas.height - this.size;
-//         }
-//     }
-
-//     move() {
-//         if (this.isClimbingUp) {
-//             this.climb();
-//         }
-//         else if (this.climbDown) {
-//             this.down()
-//         }
-//         else {
-//             this.walk();
-//         }
-//     }
-
-//     walk() {
-//         let flag = true;
-
-//         if (this.y + this.size < canvas.height) {
-//             platforms.forEach(platform => {
-//                 if (platform.y - (this.y + this.size) < 1 && this.x + this.size <= platform.x) {
-//                     let k = 0;
-//                     if (this.platformsCrossed.length > 0) {
-//                         this.platformsCrossed.forEach(crossed => {
-//                             if (platform == crossed) {
-//                                 k++;
-//                             }
-//                         });
-//                         console.log(k);
-//                     }
-//                     if (k == 0) {
-//                         this.platformsCrossed.push(platform);
-//                         this.climbDown = true;
-//                         console.log("acc");
-//                     }
-//                 }
-//             });
-
-//             if (!this.climbDown) {
-//                 platforms.forEach(platform => {
-//                     if (this.isNearPlatform(platform)) {
-//                         flag = false;
-//                         this.isClimbingUp = true;
-//                     }
-//                 });
-
-//                 if (flag) {
-//                     this.x += this.speed;
-//                 }
-//             }
-
-//         }
-
-//         else {
-//             platforms.forEach(platform => {
-//                 if (this.isNearPlatform(platform)) {
-//                     if (platform.y == groundLevel - 60) {
-//                         console.log(this.x + this.size);
-//                         console.log(platform.x);
-//                         flag = false;
-//                         this.isClimbingUp = true;
-//                     }
-//                     else {
-//                         this.isMoving = false;
-//                     }
-//                 }
-//             });
-
-//             if (flag) {
-//                 this.x += this.speed;
-//             }
-//             //console.log(onPlatform);
-//         }
-//     }
-
-//     climb() {
-//         this.y -= this.climbSpeed; // Move up
-
-//         let num = 0;
-//         platforms.forEach(platform => {
-//             if (platform.x > player.x) {
-//                 num++;
-//             }
-//         })
-//         if (num == 0) {
-//             this.isClimbingUp = false;
-//         }
-
-//         // Check if zombie has reached the top of the platform
-//         platforms.forEach(platform => {
-//             if (this.hasReachedTop(platform)) {
-//                 this.isClimbingUp = false;
-//             }
-//         });
-//     }
-
-//     down() {
-//         this.y += this.climbSpeed;
-//         // platforms.forEach(platform => {
-//         //     if (this.hasReachedDown(platform)) {
-//         //         this.climbDown = false;
-//         //         console.log("platform");
-//         //     }
-//         // });
-//         if (this.y + this.size >= canvas.height) {
-//             this.climbDown = false;
-
-//         }
-//     }
-
-//     isNearPlatform(platform) {
-//         return (
-//             // this.x + this.size > platform.x &&
-//             this.x < platform.x + platform.width &&
-//             this.y + this.size >= platform.y &&
-//             this.y < platform.y + platform.height
-//         );
-//     }
-
-//     hasReachedTop(platform) {
-//         return this.y <= platform.y - this.size;
-//     }
-
-//     hasReachedDown(platform) {
-//         console.log(this.y + this.size);
-//         console.log(platform.y);
-//         return this.y + this.size > platform.y;
-//     }
-
-//     checkCollisionWithPlayer() {
-//         if (
-//             // this.x + this.size > player.x &&
-//             this.x < player.x + player.width / 2 &&
-//             this.y + this.size >= player.y && player.y + player.height / 2 >= this.y
-//         ) {
-//             player.attack++;
-//             this.isMoving = false;
-//         }
-//         else {
-//             this.isMoving = true;
-//         }
-//     }
-// }
-
 class ClimberZombieR {
     constructor(x, y, speed) {
         this.x = x;
@@ -1351,244 +1156,6 @@ function drawZombies() {
     ClimberZombies.forEach(zombieC => { zombieC.draw() });
     ImmuneZombies.forEach(zombie => zombie.draw());
 }
-
-// class Player {
-//     constructor(x, y, width, height, speed) {
-//         this.x = x;
-//         this.y = y;
-//         this.width = width;
-//         this.height = height;
-//         this.speed = speed;
-//         this.velX = 0;
-//         this.velY = 0;
-//         this.isJumping = false;
-//         this.isGrounded = true;
-//         this.maxHealth = 1000;
-//         this.attack = 0;
-//         this.weapon = 1;
-//         this.gunImage = gun1;
-//         this.recoil = 0;
-//         this.recoilDuration = 5;
-//         this.image = playerSR;
-//     }
-
-//     moveLeft() {
-//         this.velX = -this.speed;
-//     }
-
-//     moveRight() {
-//         this.velX = this.speed;
-//     }
-
-//     jump() {
-//         if (this.isGrounded) {
-//             this.velY = -15; // Jump strength
-//             this.isJumping = true;
-//             this.isGrounded = false;
-//         }
-//     }
-
-//     update() {
-//         if (!jetpackActive) {
-//             if (this.y + this.height / 2 < groundLevel) {
-//                 if (platforms.length > 0) {
-//                     platforms.forEach(platform => {
-//                         // Simple collision detection for platforms
-//                         if (!(player.y + player.height / 2 <= platform.y && player.y + player.height / 2 + player.velY >= platform.y && player.x + player.width / 2 >= platform.x && player.x - player.width / 2 <= platform.x + platform.width)) {
-//                             this.velY += gravity;
-//                             //console.log("added");
-//                             this.isGrounded = false;
-//                         }
-//                     });
-//                 }
-//                 else {
-//                     this.velY += gravity;
-//                     this.isGrounded = false;
-//                 }
-
-//             } else {
-//                 this.isJumping = false;
-//                 this.isGrounded = true;
-//                 this.y = groundLevel - this.height / 2;
-//             }
-
-//             if (this.y - this.height / 2 <= 0) {
-//                 this.velY = gravity;
-//             }
-//         }
-//         else if (jetpackActive && jetpackUsedTime < jetpackLifetime) {
-//             if (this.y > jetpackMaxHeight) {
-//                 this.y -= jetpackSpeed; // Move the player up
-//                 console.log(this.y);
-//                 jetpackUsedTime += 1000 / 60; // Increment the used time (assuming 60 FPS)
-//             } else {
-//                 jetpackActive = false; // Deactivate the jetpack when max height is reached
-//             }
-//         } else {
-//             if (this.y < playerGroundY) {
-//                 this.y += fallSpeed; // Move the player down if above ground level
-//                 console.log("bruhh");
-//             } else {
-//                 this.y = playerGroundY; // Reset position to ground level
-//                 jetpackActive = false; // Ensure jetpack is deactivated
-//                 jetpackUsedTime = 0; // Reset jetpack used time if needed
-//             }
-//         }
-
-//         platforms.forEach(platform => {
-//             if (player.y + player.height / 2 <= platform.y && player.y + player.height / 2 + player.velY >= platform.y && player.x + player.width / 2 >= platform.x && player.x - player.width / 2 <= platform.x + platform.width) {
-//                 this.velY = 0;
-//             }
-//         });
-
-//         let platformBlock = false;
-
-//         platforms.forEach(platform => {
-//             // Check if moving right
-//             if (this.velX > 0) {
-//                 if (
-//                     this.x + this.width / 2 <= platform.x &&
-//                     this.x + this.width / 2 + this.velX > platform.x && this.y > platform.y - platform.height
-//                 ) {
-//                     platformBlock = true;
-//                 }
-//             }
-//             // Check if moving left
-//             else if (this.velX < 0) {
-//                 if (this.x - this.width / 2 >= platform.x + platform.width &&
-//                     this.x - this.width / 2 + this.velX < platform.x + platform.width && this.y > platform.y - platform.height) {
-//                     platformBlock = true;
-//                     console.log(platform.x);
-//                     console.log(this.x);
-//                     console.log('');
-//                 }
-//             }
-//         });
-
-//         let zombieBlock = false;
-
-//         zombies.forEach(zombie => {
-//             // Check if moving right
-//             if (this.velX > 0) {
-//                 if (
-//                     this.x + this.width / 2 <= zombie.x &&
-//                     this.x + this.width / 2 + this.velX >= zombie.x &&
-//                     this.y + this.height > zombie.y &&
-//                     this.y < zombie.y + zombie.size
-//                 ) {
-//                     zombieBlock = true;
-//                 }
-//             }
-//             // Check if moving left
-//             else if (this.velX < 0) {
-//                 if (
-//                     this.x - this.width / 2 >= zombie.x + zombie.size &&
-//                     this.x - this.width / 2 + this.velX <= zombie.x + zombie.size &&
-//                     this.y + this.height > zombie.y &&
-//                     this.y < zombie.y + zombie.size
-//                 ) {
-//                     zombieBlock = true;
-//                 }
-//             }
-//         });
-
-//         zombiesR.forEach(zombie => {
-//             // Check if moving right
-//             if (this.velX > 0) {
-//                 if (
-//                     this.x + this.width / 2 <= zombie.x &&
-//                     this.x + this.width / 2 + this.velX >= zombie.x &&
-//                     this.y + this.height > zombie.y &&
-//                     this.y < zombie.y + zombie.size
-//                 ) {
-//                     zombieBlock = true;
-//                 }
-//             }
-//             // Check if moving left
-//             else if (this.velX < 0) {
-//                 if (
-//                     this.x - this.width / 2 >= zombie.x + zombie.size &&
-//                     this.x - this.width / 2 + this.velX <= zombie.x + zombie.size &&
-//                     this.y + this.height > zombie.y &&
-//                     this.y < zombie.y + zombie.size
-//                 ) {
-//                     zombieBlock = true;
-//                 }
-//             }
-//         });
-
-//         if (!(platformBlock) && !(zombieBlock)) {
-//             this.x += this.velX;
-//         }
-
-//         if (!jetpackActive) {
-//             this.y += this.velY;
-//         }
-//         // Keep the player within the canvas bounds
-//         if (this.x - this.width / 2 < 0) {
-//             this.x = this.width / 2;
-//         } else if (this.x + this.width / 2 > canvas.width) {
-//             this.x = canvas.width - this.width / 2;
-//         }
-//         if (this.attack >= this.maxHealth) {
-//             // Mark this platform for destruction
-//             playerHistory.push([userName, score]);
-//             let jsonString = JSON.stringify(playerHistory);
-//             localStorage.setItem('Leaderboard', jsonString);
-//             showGameOverScreen();
-//             isPaused = true;
-//             gameOn = false;
-//         }
-//         if (this.recoil > 0) {
-//             this.recoil--;
-//         }
-//     }
-
-//     drawHealthBar(ctx) {
-//         const barWidth = 100;
-//         const barHeight = 10;
-//         const barX = this.x - barWidth / 2;
-//         const barY = this.y - this.height / 2 - 20;
-//         const healthRatio = (this.maxHealth - this.attack) / this.maxHealth;
-//         const filledWidth = barWidth * healthRatio;
-
-//         ctx.fillStyle = 'red';
-//         ctx.fillRect(barX, barY, barWidth, barHeight);
-//         ctx.fillStyle = 'green';
-//         ctx.fillRect(barX, barY, filledWidth, barHeight);
-//         ctx.strokeStyle = 'black';
-//         ctx.strokeRect(barX, barY, barWidth, barHeight);
-//     }
-
-//     draw(ctx) {
-//         ctx.fillStyle = 'blue';
-//         ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
-//         ctx.drawImage(this.x - this.width / 2, this.y - this.height / 2,)
-//         this.drawHealthBar(ctx);
-//         // Draw the gun
-//         const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
-//         const gunLength = 70;
-//         const gunWidth = 60;
-//         if (this.weapon == 1) {
-//             this.gunImage = gun1;
-//         }
-//         else if (this.weapon == 2) {
-//             this.gunImage = gun2;
-//         }
-//         else if (this.weapon == 3) {
-//             this.gunImage = gun3;
-//         }
-//         ctx.save();
-//         ctx.translate(this.x, this.y);
-//         ctx.rotate(angle);
-//         // ctx.fillStyle = 'black';
-//         // ctx.fillRect(0, -gunWidth / 2, gunLength, gunWidth);
-//         const recoilOffset = this.recoil > 0 ? -10 : 0;
-//         ctx.drawImage(this.gunImage, recoilOffset, -gunWidth / 2, gunLength, gunWidth);
-//         // ctx.drawImage(this.gunImage, 0, -gunWidth / 2, gunLength, gunWidth);
-//         ctx.restore();
-//     }
-// }
 
 class Player {
     constructor(x, y, width, height, speed) {
@@ -2158,13 +1725,13 @@ class Miness {
 let player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
 let bullets = [];
 let mouse = { x: 0, y: 0 };
-const playerGroundY = groundLevel - player.height / 2; // Ground level
-const jetpackLifetime = 5000; // Jetpack active time in milliseconds (e.g., 5 seconds)
-let jetpackUsedTime = 0; // Time the jetpack has been used
-let jetpackActive = false; // Is the jetpack currently active
-const jetpackMaxHeight = 300; // The height the player should reach when jetpack is active
-const jetpackSpeed = 4; // Speed of the jetpack
-const fallSpeed = 2; // Speed at which the player falls down
+const playerGroundY = groundLevel - player.height / 2;
+const jetpackLifetime = 5000;
+let jetpackUsedTime = 0;
+let jetpackActive = false;
+const jetpackMaxHeight = 300;
+const jetpackSpeed = 4;
+const fallSpeed = 2;
 
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
@@ -2409,14 +1976,21 @@ function startGame() {
         console.log('Game started with player:', playerName);
         isPaused = false;
         gameOn = true;
-        gameLoop();
+        zombieImageR.onload = () => {
+            zombieImage.onload = () => {
+                playerSR.onload = () => {
+                    gameLoop();
+                }
+            }
+        }
         nameInputContainer.style.display = 'none';
         getPlatformWithMinXAndMinY(platforms).defensive = true;
         defenSet = true;
         ctx.save();
         canvas.width = 2000;
         ctx.restore();
-    } else {
+    }
+    else {
         alert('Please enter your name to start the game.');
     }
 }
