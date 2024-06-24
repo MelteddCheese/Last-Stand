@@ -1982,8 +1982,6 @@ const images = [
     './walkR.png',
     './Attack_1.png',
     './AttackR.png',
-    './walkC.png',
-    './RwalkC.png',
     './gun11.png',
     './gun2.png',
     './gun3.png',
@@ -1996,7 +1994,9 @@ const images = [
     './tiles.png',
     './block.png',
     './bomb.png',
-    './explosionBullet.png'
+    './explosionBullet.png',
+    './walkC.png',
+    './RwalkC.png',
 ];
 
 let loadedImages = 0;
