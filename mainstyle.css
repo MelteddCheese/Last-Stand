@@ -1,0 +1,46 @@
+body {
+    margin: 0;
+    padding: 0;
+    /* background-color: #e96868; */
+    background: linear-gradient(to bottom right, #8A0303, #660000, #260703, #C89498);
+    background: linear-gradient(to bottom right, #110003, #630001, #8A0505, #BF0202, #EE0000, #423229);
+    /* Dark background color */
+    color: #e0e0e0;
+    /* Light grey text color */
+    /* font-family: 'Arial', sans-serif; */
+    /* font-family: 'Horror Type', sans-serif; */
+    font-family: 'Creepster', cursive;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    text-align: center;
+    max-width: 800px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Semi-transparent background for content */
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+    /* Red shadow for a scary effect */
+}
+
+.title-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.instructions p {
+    margin: 10px 0;
+    font-size: 1.5em;
+}
+
+.instructions p::before {
+    content: "▶ ";
+    color: #f00;
+    /* Red arrow for bullet points */
+}

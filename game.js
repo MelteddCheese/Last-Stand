@@ -3,9 +3,10 @@ const inventoryCanvas = document.getElementById('inventory');
 const inventoryCtx = inventoryCanvas.getContext('2d');
 const gameAreaCtx = canvas.getContext('2d');
 
+// const explosionBullet = document.querySelector(".explosionBullet");
 const ctx = canvas.getContext('2d');
 const gravity = 0.2;
-const groundLevel = canvas.height - 30;
+let groundLevel = canvas.height - 30;
 let platforms = [];
 let traps = [];
 let MinesPlaced = [];
@@ -29,7 +30,7 @@ let offsetY = 0;
 for (let i = 0; i < 4; i++) {
     blocks.push({
         x: 10,
-        y: i * (blockSize + 10) + 10,
+        y: i * (blockSize + 10) + 30,
         width: blockSize,
         height: blockSize,
         color: 'red'
@@ -38,58 +39,40 @@ for (let i = 0; i < 4; i++) {
 
 for (let i = 0; i < 2; i++) {
     blanks.push({
-        x: 100,
-        y: (i) * (blockSize + 10) + 10,
+        x: 120,
+        y: (i) * (blockSize + 10) + 50,
         width: blankWidth,
         height: blankHeight,
-        color: 'black'
+        color: 'rgb(36,20,20)'
     })
 }
 
-let mines = [{ image: bomb, x: 200, y: 10, width: 30, height: 30 },];
+let mines = [{ image: bomb, x: 200, y: 70, width: 30, height: 30 },];
 
 function drawInventory() {
     inventoryCtx.clearRect(0, 0, inventoryCanvas.width, inventoryCanvas.height);
     blocks.forEach(block => {
-        inventoryCtx.fillStyle = block.color;
-        inventoryCtx.fillRect(block.x, block.y, block.width, block.height);
+        // inventoryCtx.fillStyle = block.color;
+        // inventoryCtx.fillRect(block.x, block.y, block.width, block.height);
+        inventoryCtx.drawImage(obs, block.x, block.y, block.width, block.height);
     });
     blanks.forEach(blank => {
-        inventoryCtx.fillStyle = 'black';
+        inventoryCtx.fillStyle = 'rgb(36,20,20)';
         inventoryCtx.fillRect(blank.x, blank.y, blank.width, blank.height);
         console.log("done");
     })
     if (MinesPlaced.length == 0) {
-        inventoryCtx.drawImage(bomb, 200, 10, 30, 30);
+        inventoryCtx.drawImage(bomb, mines[0].x, mines[0].y, 30, 30);
     }
 }
-
-// function drawGameArea() {
-//     gameAreaCtx.clearRect(0, 0, canvas.width, canvas.height);
-//     if (draggingBlock) {
-//         gameAreaCtx.fillStyle = draggingBlock.color;
-//         gameAreaCtx.fillRect(draggingBlock.x, draggingBlock.y, draggingBlock.width, draggingBlock.height);
-//         setupBlocks.forEach(Block => {
-//             gameAreaCtx.fillStyle = Block.color;
-//             gameAreaCtx.fillRect(Block.x, Block.y, Block.width, Block.height);
-//         })
-//     }
-//     if (draggingBlank) {
-//         gameAreaCtx.fillStyle = draggingBlank.color;
-//         gameAreaCtx.fillRect(draggingBlank.x, draggingBlank.y, draggingBlank.width, draggingBlank.height);
-//         setupBlanks.forEach(Blank => {
-//             gameAreaCtx.fillStyle = Blank.color;
-//             gameAreaCtx.fillRect(Blank.x, Blank.y, Blank.width, Blank.height);
-//         })
-//     }
-// }
 
 function drawGameArea() {
     gameAreaCtx.clearRect(0, 0, canvas.width, canvas.height);
     gameAreaCtx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
     setupBlocks.forEach(Block => {
-        gameAreaCtx.fillStyle = Block.color;
-        gameAreaCtx.fillRect(Block.x, Block.y, Block.width, Block.height);
+        // gameAreaCtx.fillStyle = Block.color;
+        // gameAreaCtx.fillRect(Block.x, Block.y, Block.width, Block.height);
+        gameAreaCtx.drawImage(obs, Block.x, Block.y, Block.width, Block.height);
     })
     setupBlanks.forEach(Blank => {
         gameAreaCtx.fillStyle = Blank.color;
@@ -158,47 +141,6 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('mouseup', (e) => {
-    // if (draggingBlock) {
-    //     // Drop the block in the game area
-    //     const canvasRect = canvas.getBoundingClientRect();
-    //     draggingBlock.x = e.clientX - canvasRect.left - offsetX;
-    //     draggingBlock.y = e.clientY - canvasRect.top - offsetY;
-
-    //     // draggingBlock.x = Math.max(0, Math.min(draggingBlock.x, canvas.width - blockSize));
-    //     // draggingBlock.y = Math.max(0, Math.min(draggingBlock.y, canvas.height - blockSize));
-
-    //     draggingBlock.x = Math.max(0, Math.min(draggingBlock.x, canvas.width - blockSize));
-    //     const groundHeight = canvas.height - blockSize;
-    //     const upperHeight = canvas.height - 2 * blockSize;
-    //     let blockAtGround = setupBlocks.some(block => block.y === groundHeight && ((block.x >= draggingBlock.x && draggingBlock.x + blockSize >= block.x) || (block.x <= draggingBlock.x && block.x + blockSize >= draggingBlock.x)));
-    //     let wrongPosition = setupBlocks.some(block => block.y === upperHeight && ((block.x >= draggingBlock.x && draggingBlock.x + blockSize >= block.x) || (block.x <= draggingBlock.x && block.x + blockSize >= draggingBlock.x)));
-    //     if (blockAtGround) {
-    //         draggingBlock.y = upperHeight;
-    //     }
-    //     else if (!blockAtGround) {
-    //         draggingBlock.y = groundHeight;
-    //     }
-    //     if (wrongPosition !== null) {
-    //         setupBlocks[setupBlocks.length - 1].x = draggingBlock.x;
-    //         setupBlocks[setupBlocks.length - 1].y = draggingBlock.y;
-    //         platforms.push(new Platform(draggingBlock.x, draggingBlock.y));
-    //         blocks.splice(blocks.length - 1, 1);
-    //         if (platforms.length == 4 && traps.length == 2 && setupBombs.length > 0) {
-    //             nameInputContainer.style.display = 'block';
-    //             document.querySelector(".container").style.visibility = 'visible';
-    //             document.getElementById("controls").style.visibility = 'visible';
-    //             inventoryCanvas.style.display = 'none';
-    //         }
-    //     }
-    //     else {
-    //         setupBlocks.splice(setupBlocks.length - 1, 1);
-    //     }
-
-    //     //console.log(setupBlocks);
-    //     drawGameArea();
-    //     drawInventory();
-    //     draggingBlock = null;
-    // }
     if (draggingBlock) {
         // Drop the block in the game area
         const canvasRect = canvas.getBoundingClientRect();
@@ -236,6 +178,9 @@ document.addEventListener('mouseup', (e) => {
                 document.querySelector(".container").style.visibility = 'visible';
                 document.getElementById("controls").style.visibility = 'visible';
                 inventoryCanvas.style.display = 'none';
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                groundLevel = canvas.height - 30;
             }
         } else {
             setupBlocks.splice(setupBlocks.length - 1, 1);
@@ -264,6 +209,9 @@ document.addEventListener('mouseup', (e) => {
             document.querySelector(".container").style.visibility = 'visible';
             document.getElementById("controls").style.visibility = 'visible';
             inventoryCanvas.style.display = 'none';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            groundLevel = canvas.height - 30;
         }
         console.log(setupBlanks);
         drawInventory();
@@ -292,6 +240,9 @@ document.addEventListener('mouseup', (e) => {
             document.querySelector(".container").style.visibility = 'visible';
             document.getElementById("controls").style.visibility = 'visible';
             inventoryCanvas.style.display = 'none';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            groundLevel = canvas.height - 30;
         }
         draggingBomb = null;
         console.log(setupBombs);
@@ -337,10 +288,17 @@ var playerRR = new Image();
 playerRR.src = './spriteRunRight.png';
 var playerRL = new Image();
 playerRL.src = './spriteRunLeft.png';
+var obs = new Image();
+obs.src = './block.png';
 var bomb = new Image();
 bomb.src = './bomb.png';
+var explosionBullet = new Image();
+explosionBullet.src = './explosionBullet.png';
+
 bomb.onload = () => {
-    drawInventory();
+    obs.onload = () => {
+        drawInventory();
+    }
 };
 
 function getPlatformWithMaxXAndMinY(platforms) {
@@ -725,9 +683,9 @@ class ClimberZombie {
         }
         ctx.drawImage(this.image, frameX, 0,
             this.frameWidth, this.frameHeight, this.x, this.y, this.size * 1.5, this.size * 1.5);
-        ctx.beginPath();
-        ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
-        ctx.stroke();
+        // ctx.beginPath();
+        // ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
+        // ctx.stroke();
     }
 
     update() {
@@ -934,9 +892,9 @@ class ClimberZombieR {
         }
         ctx.drawImage(this.image, frameX, 0,
             this.frameWidth, this.frameHeight, this.x, this.y, this.size * 1.5, this.size * 1.5);
-        ctx.beginPath();
-        ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
-        ctx.stroke();
+        // ctx.beginPath();
+        // ctx.rect(this.x + (this.size * 1.5 / 4), this.y + this.size, this.size / 1.5, this.size / 2);
+        // ctx.stroke();
     }
 
     update() {
@@ -1462,8 +1420,10 @@ function resetGame() {
         MinesPlaced.push(new Miness(setupBombs[k].x, setupBombs[k].y))
     }
     player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
+    isPaused = false;
 }
 
+var newBlasts = [];
 var Bullet2 = 20;
 var bullet3 = 10;
 class Bullet {
@@ -1498,7 +1458,7 @@ class Bullet {
             range = 1;
         }
         if (this.automated) {
-            range = 3;
+            range = 2;
         }
         //collision of bullet and zombies
         for (let i = zombies.length - 1; i >= 0; i--) {
@@ -1508,6 +1468,7 @@ class Bullet {
                 // Remove zombie and bullet upon collision
                 score++;
                 document.getElementById("score").innerText = score;
+                newBlasts.push(new Blast(this.x, this.y));
                 zombies.splice(i, 1);
                 bullets.splice(bullets.indexOf(this), 1);
                 if (i == 0) {
@@ -1526,6 +1487,7 @@ class Bullet {
                 // Remove zombie and bullet upon collision
                 score++;
                 document.getElementById("score").innerText = score;
+                newBlasts.push(new Blast(this.x, this.y));
                 zombiesR.splice(i, 1);
                 bullets.splice(bullets.indexOf(this), 1);
                 if (i == 0) {
@@ -1544,6 +1506,7 @@ class Bullet {
                     // Remove zombie and bullet upon collision
                     score++;
                     document.getElementById("score").innerText = score;
+                    newBlasts.push(new Blast(this.x, this.y));
                     ClimberZombies.splice(i, 1);
                     bullets.splice(bullets.indexOf(this), 1);
                     return;
@@ -1570,6 +1533,7 @@ class Bullet {
                             player.attack = 0;
                         }
                     }
+                    newBlasts.push(new Blast(this.x, this.y));
                     bullets.splice(bullets.indexOf(this), 1);
                     return;
                 }
@@ -1611,8 +1575,9 @@ class Platform {
     }
 
     draw(ctx) {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // ctx.fillStyle = 'red';
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.drawImage(obs, this.x, this.y, this.width, this.height);
         if (this.defensive) {
             const gunLength = 70;
             const gunWidth = 10;
@@ -1657,11 +1622,11 @@ class trap {
         this.x = x;
         this.y = y;
         this.width = 50;
-        this.height = 5;
+        this.height = 10;
         this.trapped = 0;
     }
     draw(ctx) {
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = 'rgb(36,20,20)';
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 
@@ -1853,10 +1818,52 @@ function shoot(auto = false) {
 
 }
 
+class Blast {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+
+        this.width = 100;
+        this.height = 100;
+
+        this.radius = this.width / 2;
+        this.image = explosionBullet;
+        this.frames = 0;
+    }
+    draw() {
+
+        if (this.image) {
+            console.log("drawing");
+            ctx.drawImage(
+                this.image,
+                307.42 * this.frames,
+                0,
+                307.42,
+                350,
+                this.x,
+                this.y,
+                this.width,
+                this.height
+            );
+        }
+        else {
+            console.log("image not forun");
+        }
+    }
+
+    update() {
+        this.frames++;
+        //console.log(this.frames);
+        if (this.frames <= 7) this.draw();
+    }
+}
+
 function update() {
     player.update();
     bullets.forEach(bullet => bullet.update());
-
+    // newBlasts.forEach(happ => {
+    //     happ.update();
+    // })
     // Remove bullets that are out of bounds
     bullets = bullets.filter(bullet => (bullet.x > 0 && bullet.x < canvas.width && bullet.y > 0 && bullet.y < canvas.height));
 
@@ -1874,23 +1881,27 @@ function update() {
     traps.forEach(trap => { trap.update() });
     MinesPlaced.forEach(Mine => {
         Mine.update();
+    });
+    newBlasts.forEach(happ => {
+        happ.update();
     })
 }
 
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImage, bgIndex, 0, backgroundImage.width, canvas.height, -200, 0, backgroundImage.width, canvas.height);
+    ctx.drawImage(backgroundImage, bgIndex, 0, backgroundImage.width, canvas.height, -200, 0, backgroundImage.width, canvas.height + 30);
     for (let i = -4; i < 1000; i++) {
         ctx.drawImage(tiles, i * tiles.width - tilesIndex, groundLevel, tiles.width, tiles.height);
     }
     bgCheck = true;
-    player.draw(ctx);
+
     platforms.forEach(platform => platform.draw(ctx));
     traps.forEach(trap => trap.draw(ctx));
     //console.log(MinesPlaced);
     MinesPlaced.forEach(Mine => {
         Mine.draw(ctx);
-    })
+    });
+    player.draw(ctx);
     updateZombies();
     drawZombies();
     bullets.forEach(bullet => bullet.draw(ctx));
@@ -1903,8 +1914,6 @@ tiles.src = './tiles.png';
 var bgIndex = 0;
 var tilesIndex = 0;
 var timeTaken = 0;
-
-let bb = 0;
 
 function gameLoop() {
     if (!isPaused) {
@@ -1932,10 +1941,7 @@ function gameLoop() {
         if (Number.isInteger(timeTaken)) {
             //console.log('entered');
             if (timeTaken % 30 == 0) {
-                if (bb == 0) {
-                    createClimber();
-                    bb++;
-                }
+                createClimber();
             }
             if (timeTaken % 60 == 0) {
                 createImmuneZombie();
@@ -1970,7 +1976,7 @@ const nameInput = document.getElementById('nameInput');
 var gameOn = false;
 var defenSet = false;
 
-// Image loading mechanism
+// Image loading
 const images = [
     './Walk.png',
     './walkR.png',
@@ -1986,7 +1992,8 @@ const images = [
     './spriteStandLeft.png',
     './spriteRunRight.png',
     './spriteRunLeft.png',
-    './bomb.png'
+    './bomb.png',
+    './explosionBullet.png'
 ];
 
 let loadedImages = 0;
@@ -2018,9 +2025,12 @@ function startGame() {
         nameInputContainer.style.display = 'none';
         getPlatformWithMinXAndMinY(platforms).defensive = true;
         defenSet = true;
-        ctx.save();
-        canvas.width = 2000;
-        ctx.restore();
+        // ctx.save();
+        //canvas.width = 2000;
+        // canvas.width = window.innerWidth;
+        // canvas.height = window.innerHeight;
+        // groundLevel = canvas.height - 30;
+        // ctx.restore();
     }
     else {
         alert('Please enter your name to start the game.');
@@ -2038,7 +2048,16 @@ window.onload = () => {
     //nameInputContainer.style.display = 'block';
     document.querySelector(".container").style.visibility = 'hidden';
     document.getElementById("controls").style.visibility = 'hidden';
+    // inventoryCanvas.style.display = 'flex';
+    canvas.height = window.innerHeight;
+    inventoryCanvas.height = window.innerHeight;
+    groundLevel = canvas.height - 30;
     inventoryCanvas.style.display = 'flex';
+    bomb.onload = () => {
+        obs.onload = () => {
+            drawInventory();
+        }
+    };
     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 };
 
@@ -2066,18 +2085,44 @@ document.getElementById("closeButton").addEventListener("click", function () {
     gameLoop();
 })
 
+
+let weapon1 = document.getElementById('weapon1');
+let weapon2 = document.getElementById('weapon2');
+let weapon3 = document.getElementById('weapon3');
+let weapon4 = document.getElementById('bomb');
+
 document.getElementById('weapon1').addEventListener('click', () => {
     player.weapon = 1;
+    const weapons = document.querySelectorAll('.weapon');
+    weapons.forEach(weapon => {
+        weapon.classList.remove('used');
+    });
+    weapon1.classList.add('name');
 });
 
 document.getElementById('weapon2').addEventListener('click', () => {
     player.weapon = 2;
+    const weapons = document.querySelectorAll('.weapon');
+    weapons.forEach(weapon => {
+        weapon.classList.remove('used');
+    });
+    weapon2.classList.add('name');
 });
 
 document.getElementById('weapon3').addEventListener('click', () => {
     player.weapon = 3;
+    const weapons = document.querySelectorAll('.weapon');
+    weapons.forEach(weapon => {
+        weapon.classList.remove('used');
+    });
+    weapon2.classList.add('name');
 });
 
 document.getElementById('bomb').addEventListener('click', () => {
     MinesPlaced[0].activated = true;
+    const weapons = document.querySelectorAll('.weapon');
+    weapons.forEach(weapon => {
+        weapon.classList.remove('used');
+    });
+    weapon4.classList.add('name');
 });

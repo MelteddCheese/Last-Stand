@@ -11,7 +11,7 @@
 <body>
     <div id="gameOverScreen" style="display: none;">
         <h1>Game Over</h1>
-        <p id="loseMessage">You lost ;-;</p>
+        <p id="loseMessage">Player Died</p>
         <div id="buttonContainer">
             <button id="replayButton">Replay</button>
         </div>
@@ -48,24 +48,9 @@
             data-info="Activate Mines: Kills all the zombies on the side not containing the player"></button>
     </div>
     <canvas id="inventory" width="250" height="800"></canvas>
-    <canvas id="gameCanvas" width="1700" height="800"></canvas>
-    <script src="index.js"></script>
+    <canvas id="gameCanvas" width="1780" height="800"></canvas>
+    <!-- <img class="explosionBullet" src="./explosionBullet.png" alt="" /> -->
+    <script src="game.js"></script>
 </body>
 
 </html>
-
-<!-- <div class="weapon" id="weapon1"
-            data-info="Low range, unlimited, should be targeted on the head of the zombie to destroy it">
-            <img src="./gun11.png" alt="Weapon 1">
-        </div>
-        <div class="weapon" id="weapon2"
-            data-info="Better range, limit=20, can be replenished on killing a Immune Zombie">
-            <img src="./gun2.png" alt="Weapon 2">
-        </div>
-        <div class="weapon" id="weapon3"
-            data-info="Better range and immune to gravity, limit=20, can be replenished on killing a Immune Zombie">
-            <img src="./gun3.png" alt="Weapon 2">
-        </div>
-        <div class="weapon" id="bomb">
-            <img src="./bomb.png" alt="bomb">
-        </div> -->
