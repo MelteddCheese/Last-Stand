@@ -1055,7 +1055,7 @@ class ClimberZombieR {
     checkCollisionWithPlayer() {
         if (
             // this.x + this.size > player.x &&
-            this.x < player.x + player.width / 2 &&
+            this.x <= player.x + player.width / 2 &&
             this.y + this.size >= player.y && player.y + player.height / 2 >= this.y
         ) {
             player.attack++;
@@ -1420,7 +1420,8 @@ function resetGame() {
         MinesPlaced.push(new Miness(setupBombs[k].x, setupBombs[k].y))
     }
     player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
-    isPaused = false;
+    //isPaused = false;
+    //gameLoop();
 }
 
 var newBlasts = [];
@@ -1830,7 +1831,7 @@ class Blast {
         this.image = explosionBullet;
         this.frames = 0;
     }
-    draw() {
+    draw(ctx) {
 
         if (this.image) {
             console.log("drawing");
@@ -1854,7 +1855,7 @@ class Blast {
     update() {
         this.frames++;
         //console.log(this.frames);
-        if (this.frames <= 7) this.draw();
+        if (this.frames <= 7) { this.draw(ctx) };
     }
 }
 
@@ -1965,9 +1966,8 @@ function gameLoop() {
                 createZombieR();
             }
         }
-
-        requestAnimationFrame(gameLoop);
     }
+    requestAnimationFrame(gameLoop);
 }
 
 const nameInputContainer = document.getElementById('nameInputContainer');
@@ -1992,6 +1992,9 @@ const images = [
     './spriteStandLeft.png',
     './spriteRunRight.png',
     './spriteRunLeft.png',
+    './bomb.png',
+    './tiles.png',
+    './block.png',
     './bomb.png',
     './explosionBullet.png'
 ];
@@ -2053,6 +2056,7 @@ window.onload = () => {
     inventoryCanvas.height = window.innerHeight;
     groundLevel = canvas.height - 30;
     inventoryCanvas.style.display = 'flex';
+    drawInventory();
     bomb.onload = () => {
         obs.onload = () => {
             drawInventory();
