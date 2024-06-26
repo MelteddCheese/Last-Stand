@@ -59,6 +59,10 @@ function drawInventory() {
     blanks.forEach(blank => {
         inventoryCtx.fillStyle = 'rgb(36,20,20)';
         inventoryCtx.fillRect(blank.x, blank.y, blank.width, blank.height);
+        inventoryCtx.strokeStyle = 'white';
+        inventoryCtx.beginPath();
+        inventoryCtx.rect(blank.x, blank.y, blank.width, blank.height);
+        inventoryCtx.stroke();
         console.log("done");
     })
     if (MinesPlaced.length == 0) {
@@ -77,6 +81,10 @@ function drawGameArea() {
     setupBlanks.forEach(Blank => {
         gameAreaCtx.fillStyle = Blank.color;
         gameAreaCtx.fillRect(Blank.x, Blank.y, Blank.width, Blank.height);
+        gameAreaCtx.strokeStyle = 'white';
+        gameAreaCtx.beginPath();
+        gameAreaCtx.rect(Blank.x, Blank.y, Blank.width, Blank.height);
+        gameAreaCtx.stroke();
     })
     setupBombs.forEach(Bomb => {
         gameAreaCtx.drawImage(bomb, Bomb.x, Bomb.y, minesWidth, minesHeight);
@@ -342,6 +350,9 @@ class ImmuneZombie {
         this.image = IzombieImage;
         this.attack = 0;
         this.isMoving = true;
+        this.frozen = false;
+        this.freezetimer = 100;
+        this.timefrozen = 0;
 
         this.frameIndex = 0; // Start at the first frame
         this.frameCount = 7; // Total number of frames in the sprite sheet
@@ -360,20 +371,28 @@ class ImmuneZombie {
             this.frameWidth, this.frameHeight, this.x, this.y, this.size, this.size);
     }
     update() {
-        this.checkCollisionWithPlayer();
-        if (this.isMoving) {
-            this.x += this.speed;
+        if (this.frozen) {
+            this.timefrozen++;
+            if (this.timefrozen >= this.freezetimer) {
+                this.frozen = false;
+            }
         }
-        this.frameIndex += 0.25;
-        if (this.frameIndex >= this.frameCount) {
-            this.frameIndex = 0;
-        }
-        if (this.x > canvas.width) {
-            this.x = -this.size;
-            this.y = canvas.height - this.size;
-        }
-        if (this.attack >= 2) {
-            console.log("lmk");
+        if (!this.frozen) {
+            this.checkCollisionWithPlayer();
+            if (this.isMoving) {
+                this.x += this.speed;
+            }
+            this.frameIndex += 0.25;
+            if (this.frameIndex >= this.frameCount) {
+                this.frameIndex = 0;
+            }
+            if (this.x > canvas.width) {
+                this.x = -this.size;
+                this.y = canvas.height - this.size;
+            }
+            if (this.attack >= 2) {
+                console.log("lmk");
+            }
         }
     }
     checkCollisionWithPlayer() {
@@ -403,6 +422,9 @@ class Zombie {
         this.stopped = false;
         this.speed = speed;
         this.image = zombieImage;
+        this.frozen = false;
+        this.freezetimer = 100;
+        this.timefrozen = 0;
 
         this.frameIndex = 0; // Start at the first frame
         this.frameCount = 8; // Total number of frames in the sprite sheet
@@ -421,103 +443,111 @@ class Zombie {
             this.frameWidth, this.frameHeight, this.x, this.y, this.size, this.size);
     }
     update() {
-        let i = 0;
-        for (let j = 0; j < zombies.length; j++) {
-            let zombie = zombies[j];
-            if (zombie === this) {
-                if (j == 0 && this.stopped) {
+        if (this.frozen) {
+            this.timefrozen++;
+            if (this.timefrozen >= this.freezetimer) {
+                this.frozen = false;
+            }
+        }
+        if (!this.frozen) {
+            let i = 0;
+            for (let j = 0; j < zombies.length; j++) {
+                let zombie = zombies[j];
+                if (zombie === this) {
+                    if (j == 0 && this.stopped) {
+                        i++;
+                    }
+                    break;
+                }
+                if (this.x < zombie.x + zombie.size && this.x + this.size > zombie.x) {
                     i++;
                 }
-                break;
-            }
-            if (this.x < zombie.x + zombie.size && this.x + this.size > zombie.x) {
-                i++;
-            }
-        }
-
-        let count = 0;
-        platforms.forEach(platform => {
-            if (platform.x < player.x) {
-                count++;
-            }
-        });
-        if (count == 0 && !devL) {
-            i = 0;
-        }
-
-        if (i > 0) {
-            // Zombie should stop and attack
-            this.image = zombieAttack;
-            this.frameCount = 5;
-            this.frameIndex += 0.25;
-            if (this == zombies[0]) {
-                //console.log(this.image);
-                //console.log(this.frameIndex);
-
             }
 
-            let canMove = true;
-            // Only the first zombie interacts with the platforms
-            if (this === zombies[0]) {
-                platforms.forEach(platform => {
-
-                    if (!(this.x + this.size <= platform.x || this.x - this.size >= platform.x + platform.width) && !(this.y > platform.y + platform.height)) {
-                        if (1 || platform === getPlatformWithMinXAndMinY(platforms)) {
-                            getPlatformWithMinXAndMinY(platforms).contactTimer++;
-                            canMove = false;
-                        }
-                    }
-                });
-            }
-
-            if (this.frameIndex >= this.frameCount) {
-                this.frameIndex = 0;
-            }
-
-            // Attack player if in range
-            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
-                player.attack++;
-                canMove = false;
-            }
-
-            if (canMove && this == zombies[0]) {
+            let count = 0;
+            platforms.forEach(platform => {
+                if (platform.x < player.x) {
+                    count++;
+                }
+            });
+            if (count == 0 && !devL) {
                 i = 0;
             }
-        }
-        if (i == 0) {
-            // Zombie can move
-            this.image = zombieImage;
-            this.frameCount = 8;
 
-            let canMove = true;
-            if (platforms.length > 0) {
-                platforms.forEach(platform => {
-                    if (!(this.x + this.size <= platform.x || this.x - this.size >= platform.x + platform.width)) {
-                        canMove = false;
-                    }
-                });
-            }
-            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
-                canMove = false;
-                devL = true;
-                player.attack++;
-            }
-
-            if (canMove) {
-                this.stopped = false;
-                this.x += this.speed;
+            if (i > 0) {
+                // Zombie should stop and attack
+                this.image = zombieAttack;
+                this.frameCount = 5;
                 this.frameIndex += 0.25;
+                if (this == zombies[0]) {
+                    //console.log(this.image);
+                    //console.log(this.frameIndex);
+
+                }
+
+                let canMove = true;
+                // Only the first zombie interacts with the platforms
+                if (this === zombies[0]) {
+                    platforms.forEach(platform => {
+
+                        if (!(this.x + this.size <= platform.x || this.x - this.size >= platform.x + platform.width) && !(this.y > platform.y + platform.height)) {
+                            if (1 || platform === getPlatformWithMinXAndMinY(platforms)) {
+                                getPlatformWithMinXAndMinY(platforms).contactTimer++;
+                                canMove = false;
+                            }
+                        }
+                    });
+                }
 
                 if (this.frameIndex >= this.frameCount) {
                     this.frameIndex = 0;
                 }
-            } else {
-                this.stopped = true;
-            }
-        }
 
-        if (this.x > canvas.width) {
-            this.x = -this.size;
+                // Attack player if in range
+                if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
+                    player.attack++;
+                    canMove = false;
+                }
+
+                if (canMove && this == zombies[0]) {
+                    i = 0;
+                }
+            }
+            if (i == 0) {
+                // Zombie can move
+                this.image = zombieImage;
+                this.frameCount = 8;
+
+                let canMove = true;
+                if (platforms.length > 0) {
+                    platforms.forEach(platform => {
+                        if (!(this.x + this.size <= platform.x || this.x - this.size >= platform.x + platform.width)) {
+                            canMove = false;
+                        }
+                    });
+                }
+                if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
+                    canMove = false;
+                    devL = true;
+                    player.attack++;
+                }
+
+                if (canMove) {
+                    this.stopped = false;
+                    this.x += this.speed;
+                    this.frameIndex += 0.25;
+
+                    if (this.frameIndex >= this.frameCount) {
+                        this.frameIndex = 0;
+                    }
+                } else {
+                    this.stopped = true;
+                }
+            }
+
+            if (this.x > canvas.width) {
+                zombies.splice(zombies.indexOf(this), 1);
+            }
         }
     }
 }
@@ -531,6 +561,9 @@ class ZombieR {
         this.stopped = false;
         this.speed = speed;
         this.image = zombieImageR;
+        this.frozen = false;
+        this.freezetimer = 100;
+        this.timefrozen = 0;
 
         this.frameIndex = 0
             ; // Start at the first frame
@@ -553,100 +586,111 @@ class ZombieR {
         // ctx.fillRect(this.x, this.y, this.size, this.size);
     }
     update() {
-        let i = 0;
-        for (let j = 0; j < zombiesR.length; j++) {
-            let zombie = zombiesR[j];
-            if (zombie === this) {
-                if (j == 0 && this.stopped) {
+        if (this.frozen) {
+            this.timefrozen++;
+            if (this.timefrozen >= this.freezetimer) {
+                this.frozen = false;
+            }
+        }
+        if (!this.frozen) {
+            let i = 0;
+            for (let j = 0; j < zombiesR.length; j++) {
+                let zombie = zombiesR[j];
+                if (zombie === this) {
+                    if (j == 0 && this.stopped) {
+                        i++;
+                    }
+                    break;
+                }
+                if (this.x < zombie.x + zombie.size && this.x + this.size > zombie.x) {
                     i++;
                 }
-                break;
-            }
-            if (this.x < zombie.x + zombie.size && this.x + this.size > zombie.x) {
-                i++;
-            }
-        }
-
-        let count = 0;
-        platforms.forEach(platform => {
-            if (platform.x > player.x) {
-                count++;
-            }
-        });
-        if (count == 0 && !dev) {
-            i = 0;
-        }
-
-        if (i > 0) {
-            // Zombie should stop and attack
-            this.image = zombieAttackR;
-            this.frameCount = 5;
-            this.frameIndex += 0.25;
-
-            let canMove = true;
-            // Only the first zombie interacts with the platforms
-            if (this == zombiesR[0]) {
-                platforms.forEach(platform => {
-                    if ((!(this.x >= platform.x + platform.width)) && !(this.y > platform.y + platform.height)) {
-                        if (1 || platform === getPlatformWithMaxXAndMinY(platforms)) {
-                            getPlatformWithMaxXAndMinY(platforms).contactTimer++;
-                            canMove = false;
-                        }
-                    }
-                });
             }
 
-            if (this.frameIndex >= this.frameCount) {
-                this.frameIndex = 0;
-            }
-
-            // Attack player if in range
-            if (this.x <= player.x + player.width / 2 && this.x + this.size >= player.x - player.width / 2 && player.y + player.height / 2 >= this.y) {
-                canMove = false;
-                player.attack++;
-            }
-            if (canMove && this == zombiesR[0]) {
+            let count = 0;
+            platforms.forEach(platform => {
+                if (platform.x > player.x) {
+                    count++;
+                }
+            });
+            if (count == 0 && !dev) {
                 i = 0;
             }
-        }
 
-        if (i == 0) {
-            // Zombie can move
-            this.image = zombieImageR;
-            this.frameCount = 8;
-
-            let canMove = true;
-            if (platforms.length !== 0) {
-                platforms.forEach(platform => {
-                    if (!(this.x >= platform.x + platform.width)) {
-                        canMove = false;
-                    }
-                });
-            }
-            if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
-                canMove = false;
-                dev = true;
-                player.attack++;
-            }
-
-            if (canMove) {
-                this.stopped = false;
-                this.x += this.speed;
+            if (i > 0) {
+                // Zombie should stop and attack
+                this.image = zombieAttackR;
+                this.frameCount = 5;
                 this.frameIndex += 0.25;
+
+                let canMove = true;
+                // Only the first zombie interacts with the platforms
+                if (this == zombiesR[0]) {
+                    platforms.forEach(platform => {
+                        if ((!(this.x >= platform.x + platform.width)) && !(this.y > platform.y + platform.height)) {
+                            if (1 || platform === getPlatformWithMaxXAndMinY(platforms)) {
+                                getPlatformWithMaxXAndMinY(platforms).contactTimer++;
+                                canMove = false;
+                            }
+                        }
+                    });
+                }
 
                 if (this.frameIndex >= this.frameCount) {
                     this.frameIndex = 0;
                 }
-            } else {
-                this.stopped = true;
+
+                // Attack player if in range
+                if (this.x < player.x + player.width / 2 && this.x + this.size > player.x - player.width / 2 && player.y + player.height / 2 >= this.y) {
+                    canMove = false;
+                    player.attack++;
+                }
+                if (canMove && this == zombiesR[0]) {
+                    i = 0;
+                }
+            }
+
+            if (i == 0) {
+                // Zombie can move
+                this.image = zombieImageR;
+                this.frameCount = 8;
+
+                let canMove = true;
+                if (platforms.length !== 0) {
+                    platforms.forEach(platform => {
+                        if (!(this.x >= platform.x + platform.width)) {
+                            canMove = false;
+                        }
+                    });
+                }
+                if (this.x + this.size >= player.x - player.width / 2 && this.x <= player.x + player.width / 2 && player.y + player.height / 2 >= this.y) {
+                    canMove = false;
+                    dev = true;
+                    player.attack++;
+                }
+
+                if (canMove) {
+                    this.stopped = false;
+                    this.x += this.speed;
+                    this.frameIndex += 0.25;
+
+                    if (this.frameIndex >= this.frameCount) {
+                        this.frameIndex = 0;
+                    }
+                } else {
+                    this.stopped = true;
+                    this.frameIndex += 0.25;
+                    if (this.frameIndex >= this.frameCount) {
+                        this.frameIndex = 0;
+                    }
+                }
+            }
+
+            if (this.x < 0) {
+                zombiesR.splice(zombiesR.indexOf(this), 1);
             }
         }
-
-        if (this.x > canvas.width) {
-            this.x = -this.size;
-        }
     }
-
 }
 
 class ClimberZombie {
@@ -662,6 +706,9 @@ class ClimberZombie {
         this.leftX = x + (zombieSize / 4);
         this.leftY = y + zombieSize / 1.5;
         this.level = 0;
+        this.frozen = false;
+        this.freezetimer = 100;
+        this.timefrozen = 0;
 
         this.frameIndex = 0; // Start at the first frame
         this.frameCount = 10; // Total number of frames in the sprite sheet
@@ -689,17 +736,24 @@ class ClimberZombie {
     }
 
     update() {
-        this.checkCollisionWithPlayer();
-        if (this.isMoving) {
-            this.move();
+        if (this.frozen) {
+            this.timefrozen++;
+            if (this.timefrozen >= this.freezetimer) {
+                this.frozen = false;
+            }
         }
-        this.frameIndex += 0.25;
-        if (this.frameIndex >= this.frameCount) {
-            this.frameIndex = 0;
-        }
-        if (this.x > canvas.width) {
-            this.x = -this.size;
-            this.y = canvas.height - this.size;
+        if (!this.frozen) {
+            this.checkCollisionWithPlayer();
+            if (this.isMoving) {
+                this.move();
+            }
+            this.frameIndex += 0.25;
+            if (this.frameIndex >= this.frameCount) {
+                this.frameIndex = 0;
+            }
+            if (this.x > canvas.width) {
+                ClimberZombies.splice(ClimberZombies.indexOf(this), 1);
+            }
         }
     }
 
@@ -742,7 +796,14 @@ class ClimberZombie {
 
         else if (groundLevel - (this.leftY + this.height) > 1) {
             //console.log(this.platformsCrossed);
+            let isfloating = true;
             platforms.forEach(platform => {
+                if (this.leftY + this.height <= platform.y + platform.height &&
+                    this.leftY + this.height >= platform.y &&
+                    this.leftX + this.width > platform.x &&
+                    this.leftX < platform.x + platform.width) {
+                    isfloating = false;
+                }
                 if (platform.y - (this.leftY + this.height) < 1 && this.leftX >= platform.x + platform.width) {
                     if (this.platformsCrossed.length > 0) {
                         if (platform == this.platformsCrossed[this.platformsCrossed.length - 1]) {
@@ -765,6 +826,9 @@ class ClimberZombie {
                     this.x += this.speed;
                     this.leftX += this.speed;
                 }
+            }
+            if (isfloating) {
+                //this.climbDown = true;
             }
         }
     }
@@ -858,6 +922,7 @@ class ClimberZombie {
     }
 }
 
+
 class ClimberZombieR {
     constructor(x, y, speed) {
         this.x = x;
@@ -871,6 +936,9 @@ class ClimberZombieR {
         this.leftX = x + (zombieSize / 4);
         this.leftY = y + zombieSize / 1.5;
         this.level = 0;
+        this.frozen = false;
+        this.freezetimer = 10;
+        this.timefrozen = 0;
 
         this.frameIndex = 0; // Start at the first frame
         this.frameCount = 10; // Total number of frames in the sprite sheet
@@ -898,17 +966,24 @@ class ClimberZombieR {
     }
 
     update() {
-        this.checkCollisionWithPlayer();
-        if (this.isMoving) {
-            this.move();
+        if (this.frozen) {
+            this.timefrozen++;
+            if (this.timefrozen >= this.freezetimer) {
+                this.frozen = false;
+            }
         }
-        this.frameIndex += 0.25;
-        if (this.frameIndex >= this.frameCount) {
-            this.frameIndex = 0;
-        }
-        if (this.x > canvas.width) {
-            this.x = -this.size;
-            this.y = canvas.height - this.size;
+        if (!this.frozen) {
+            this.checkCollisionWithPlayer();
+            if (this.isMoving) {
+                this.move();
+            }
+            this.frameIndex += 0.25;
+            if (this.frameIndex >= this.frameCount) {
+                this.frameIndex = 0;
+            }
+            if (this.x < 0) {
+                ClimberZombies.splice(ClimberZombies.indexOf(this), 1);
+            }
         }
     }
 
@@ -926,6 +1001,7 @@ class ClimberZombieR {
 
     walk() {
         let flag = true;
+        let isfloating = true;
         if (this.level == 0) {
             platforms.forEach(platform => {
                 if (this.isNearPlatform(platform)) {
@@ -950,6 +1026,12 @@ class ClimberZombieR {
         else if (groundLevel - (this.leftY + this.height) > 1) {
             //console.log(this.platformsCrossed);
             platforms.forEach(platform => {
+                if (this.leftY + this.height <= platform.y + platform.height &&
+                    this.leftY + this.height >= platform.y &&
+                    this.leftX + this.width > platform.x &&
+                    this.leftX < platform.x + platform.width) {
+                    isfloating = false;
+                }
                 if (platform.y - (this.leftY + this.height) < 1 && this.leftX + this.width <= platform.x) {
                     if (this.platformsCrossed.length > 0) {
                         if (platform == this.platformsCrossed[this.platformsCrossed.length - 1]) {
@@ -972,6 +1054,9 @@ class ClimberZombieR {
                     this.x += this.speed;
                     this.leftX += this.speed;
                 }
+            }
+            if (isfloating) {
+                //this.climbDown = true;
             }
         }
     }
@@ -1055,8 +1140,8 @@ class ClimberZombieR {
     checkCollisionWithPlayer() {
         if (
             // this.x + this.size > player.x &&
-            this.x <= player.x + player.width / 2 &&
-            this.y + this.size >= player.y && player.y + player.height / 2 >= this.y
+            this.leftX <= player.x + player.width / 2 &&
+            this.leftY + this.height >= player.y && player.y + player.height / 2 >= this.leftY
         ) {
             player.attack++;
             this.isMoving = false;
@@ -1066,6 +1151,7 @@ class ClimberZombieR {
         }
     }
 }
+
 
 let ClimberZombies = [];
 function createZombie() {
@@ -1190,20 +1276,20 @@ class Player {
         }
         else if (jetpackActive && jetpackUsedTime < jetpackLifetime) {
             if (this.y > jetpackMaxHeight) {
-                this.y -= jetpackSpeed; // Move the player up
+                this.y -= jetpackSpeed;
                 console.log(this.y);
-                jetpackUsedTime += 1000 / 60; // Increment the used time (assuming 60 FPS)
+                jetpackUsedTime += 1000 / 60;
             } else {
-                jetpackActive = false; // Deactivate the jetpack when max height is reached
+                jetpackUsedTime += 1000 / 60;
             }
         } else {
             if (this.y < playerGroundY) {
-                this.y += fallSpeed; // Move the player down if above ground level
+                this.y += fallSpeed;
                 console.log("bruhh");
             } else {
-                this.y = playerGroundY; // Reset position to ground level
-                jetpackActive = false; // Ensure jetpack is deactivated
-                jetpackUsedTime = 0; // Reset jetpack used time if needed
+                this.y = playerGroundY;
+                jetpackActive = false;
+                jetpackUsedTime = 0;
             }
         }
 
@@ -1296,7 +1382,7 @@ class Player {
         if (!jetpackActive) {
             this.y += this.velY;
         }
-        // Keep the player within the canvas bounds
+        // Keep the player within the canvas 
         if (this.x - this.width / 2 < 0) {
             this.x = this.width / 2;
         } else if (this.x + this.width / 2 > canvas.width) {
@@ -1399,6 +1485,7 @@ function resetGame() {
     ClimberZombies = [];
     ImmuneZombies = [];
     platforms = [];
+    traps = [];
     MinesPlaced = [];
     bgIndex = 0;
     tilesIndex = 0;
@@ -1406,6 +1493,7 @@ function resetGame() {
     player.attack = 0;
     score = 0;
     Bullet2 = 20;
+    bullet3 = 10;
     killed = 0;
     document.getElementById("score").innerText = score;
     dev = false;
@@ -1420,6 +1508,7 @@ function resetGame() {
         MinesPlaced.push(new Miness(setupBombs[k].x, setupBombs[k].y))
     }
     player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
+    powerUpManager = new PowerUp(canvas.width, canvas.height, player);
     //isPaused = false;
     //gameLoop();
 }
@@ -1438,129 +1527,187 @@ class Bullet {
         this.radius = radius;
         this.path = [];
         this.automated = false;
+        this.image = explosionBullet;
+        this.blast = false;
+        this.frames = 0;
     }
 
     update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        if (player.weapon == 1 || player.weapon == 2 || this.automated) {
-            this.speedY += gravity;
-        }
-        this.path.push({ x: this.x, y: this.y });
-        let range = 3;
-        if (player.weapon == 1) {
-            range = 3;
-        }
-        else if (player.weapon == 2) {
-            range = 1;
-            //console.log("yess");
-        }
-        else if (player.weapon == 3) {
-            range = 1;
-        }
-        if (this.automated) {
-            range = 2;
-        }
-        //collision of bullet and zombies
-        for (let i = zombies.length - 1; i >= 0; i--) {
-            let zombie = zombies[i];
-            if (this.x > zombie.x && this.x < zombie.x + zombie.size &&
-                this.y > zombie.y && this.y < zombie.y + zombie.size / range) {
-                // Remove zombie and bullet upon collision
-                score++;
-                document.getElementById("score").innerText = score;
-                newBlasts.push(new Blast(this.x, this.y));
-                zombies.splice(i, 1);
+        if (this.blast) {
+            if (this.frames <= 7) {
+                this.draw(ctx);
+            }
+            else {
                 bullets.splice(bullets.indexOf(this), 1);
-                if (i == 0) {
-                    if (devL) {
-                        devL = false;
-                    }
-                }
-                return;
             }
+            this.frames++;
         }
-
-        for (let i = zombiesR.length - 1; i >= 0; i--) {
-            let zombieR = zombiesR[i];
-            if (this.x > zombieR.x && this.x < zombieR.x + zombieR.size &&
-                this.y > zombieR.y && this.y < zombieR.y + zombieR.size / range) {
-                // Remove zombie and bullet upon collision
-                score++;
-                document.getElementById("score").innerText = score;
-                newBlasts.push(new Blast(this.x, this.y));
-                zombiesR.splice(i, 1);
-                bullets.splice(bullets.indexOf(this), 1);
-                if (i == 0) {
-                    if (dev) {
-                        dev = false;
-                    }
-                }
-                return;
+        else {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (player.weapon == 1 || player.weapon == 2 || this.automated) {
+                this.speedY += gravity;
             }
-        }
-        if (!this.automated) {
-            for (let i = ClimberZombies.length - 1; i >= 0; i--) {
-                let zombie = ClimberZombies[i];
-                if (this.x > zombie.x && this.x < zombie.x + zombie.size &&
-                    this.y > zombie.y && this.y < zombie.y + zombie.size) {
-                    // Remove zombie and bullet upon collision
-                    score++;
-                    document.getElementById("score").innerText = score;
-                    newBlasts.push(new Blast(this.x, this.y));
-                    ClimberZombies.splice(i, 1);
-                    bullets.splice(bullets.indexOf(this), 1);
-                    return;
-                }
+            this.path.push({ x: this.x, y: this.y });
+            let range = 3;
+            if (player.weapon == 1) {
+                range = 3;
             }
-
-            for (let i = ImmuneZombies.length - 1; i >= 0; i--) {
-                let zombie = ImmuneZombies[i];
+            else if (player.weapon == 2) {
+                range = 1;
+                //console.log("yess");
+            }
+            else if (player.weapon == 3) {
+                range = 1;
+            }
+            if (this.automated) {
+                range = 2;
+            }
+            //collision of bullet and zombies
+            for (let i = zombies.length - 1; i >= 0; i--) {
+                let zombie = zombies[i];
                 if (this.x > zombie.x && this.x < zombie.x + zombie.size &&
                     this.y > zombie.y && this.y < zombie.y + zombie.size / range) {
-                    // Remove zombie and bullet upon collision
-                    if (zombie.attack < 2) {
-                        zombie.attack++;
+                    if (player.weapon == 3) {
+                        zombie.frozen = true;
+                        this.blast = true;
                     }
-                    if (zombie.attack == 2) {
+                    else {
                         score++;
                         document.getElementById("score").innerText = score;
-                        ImmuneZombies.splice(i, 1);
-                        Bullet2 = 20;
-                        bullet3 = 10;
-                        killed++;
-                        if (killed == 3) {
-                            killed = 0;
-                            player.attack = 0;
+                        newBlasts.push(new Blast(this.x, this.y));
+                        zombies.splice(i, 1);
+                        //bullets.splice(bullets.indexOf(this), 1);
+                        this.blast = true;
+                        if (i == 0) {
+                            if (devL) {
+                                devL = false;
+                            }
                         }
                     }
-                    newBlasts.push(new Blast(this.x, this.y));
-                    bullets.splice(bullets.indexOf(this), 1);
                     return;
+                }
+            }
+
+            for (let i = zombiesR.length - 1; i >= 0; i--) {
+                let zombieR = zombiesR[i];
+                if (this.x > zombieR.x && this.x < zombieR.x + zombieR.size &&
+                    this.y > zombieR.y && this.y < zombieR.y + zombieR.size / range) {
+                    if (player.weapon == 3) {
+                        zombieR.frozen = true;
+                        this.blast = true;
+                    }
+                    else {
+                        // Remove zombie and bullet upon collision
+                        score++;
+                        document.getElementById("score").innerText = score;
+                        newBlasts.push(new Blast(this.x, this.y));
+                        zombiesR.splice(i, 1);
+                        //bullets.splice(bullets.indexOf(this), 1);
+                        this.blast = true;
+                        if (i == 0) {
+                            if (dev) {
+                                dev = false;
+                            }
+                        }
+                    }
+                    return;
+                }
+            }
+            if (!this.automated) {
+                for (let i = ClimberZombies.length - 1; i >= 0; i--) {
+                    let zombie = ClimberZombies[i];
+                    if (this.x > zombie.x && this.x < zombie.x + zombie.size &&
+                        this.y > zombie.y && this.y < zombie.y + zombie.size) {
+                        if (player.weapon == 3) {
+                            zombie.frozen = true;
+                            this.blast = true;
+                        }
+                        else {
+                            // Remove zombie and bullet upon collision
+                            score++;
+                            document.getElementById("score").innerText = score;
+                            newBlasts.push(new Blast(this.x, this.y));
+                            ClimberZombies.splice(i, 1);
+                            //bullets.splice(bullets.indexOf(this), 1);
+                            this.blast = true;
+                        }
+                        return;
+                    }
+                }
+
+                for (let i = ImmuneZombies.length - 1; i >= 0; i--) {
+                    let zombie = ImmuneZombies[i];
+                    if (this.x > zombie.x && this.x < zombie.x + zombie.size &&
+                        this.y > zombie.y && this.y < zombie.y + zombie.size / range) {
+                        if (player.weapon == 3) {
+                            zombie.frozen = true;
+                            this.blast = true;
+                        }
+                        else {
+                            // Remove zombie and bullet upon collision
+                            if (zombie.attack < 2) {
+                                zombie.attack++;
+                            }
+                            if (zombie.attack == 2) {
+                                score++;
+                                document.getElementById("score").innerText = score;
+                                ImmuneZombies.splice(i, 1);
+                                Bullet2 = 20;
+                                bullet3 = 10;
+                                killed++;
+                                if (killed == 3) {
+                                    killed = 0;
+                                    player.attack = 0;
+                                }
+                            }
+                            newBlasts.push(new Blast(this.x, this.y));
+                            //bullets.splice(bullets.indexOf(this), 1);
+                            this.blast = true;
+                        }
+                        return;
+                    }
                 }
             }
         }
     }
 
     draw(ctx) {
-        // Draw the path as a parabola
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        if (this.path.length > 1) {
-            for (let i = 0; i < this.path.length - 1; i++) {
-                ctx.moveTo(this.path[i].x, this.path[i].y);
-                ctx.lineTo(this.path[i + 1].x, this.path[i + 1].y);
-            }
+        if (this.blast) {
+            console.log('drownn ?');
+            ctx.drawImage(
+                this.image,
+                307.42 * this.frames,
+                0,
+                307.42,
+                350,
+                this.x,
+                this.y,
+                50,
+                50
+            );
         }
-        ctx.stroke();
-        ctx.closePath();
+        else {
+            // Draw the path as a parabola
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            if (this.path.length > 1) {
+                for (let i = 0; i < this.path.length - 1; i++) {
+                    ctx.moveTo(this.path[i].x, this.path[i].y);
+                    ctx.lineTo(this.path[i + 1].x, this.path[i + 1].y);
+                }
+            }
+            ctx.stroke();
+            ctx.closePath();
 
-        // Draw the bullet
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.closePath();
+            // Draw the bullet
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        }
     }
 }
 
@@ -1629,6 +1776,10 @@ class trap {
     draw(ctx) {
         ctx.fillStyle = 'rgb(36,20,20)';
         ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.strokeStyle = 'white';
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.width, this.height);
+        ctx.stroke();
     }
 
     update() {
@@ -1688,11 +1839,93 @@ class Miness {
     }
 }
 
+class PowerUp {
+    constructor(canvasWidth, canvasHeight, player) {
+        this.canvasWidth = canvasWidth;
+        this.canvasHeight = canvasHeight;
+        this.player = player;
+        this.powerUps = [];
+    }
+
+    generateRandomPowerUp() {
+        const x = Math.random() * (this.canvasWidth - 30) + 15;
+        const y = 0;
+        const types = ['health', 'ammo', 'speed'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        this.powerUps.push({ x, y, size: 30, type, speed: 2 });
+    }
+
+    update() {
+        powerUpManager.checkPlayerCollision();
+        this.powerUps.forEach((powerUp, index) => {
+            powerUp.y += powerUp.speed;
+            if (powerUp.y - powerUp.size / 2 > groundLevel) {
+                this.powerUps.splice(index, 1);
+            }
+        });
+    }
+
+    draw(ctx) {
+        this.powerUps.forEach(powerUp => {
+            ctx.fillStyle = this.getColor(powerUp.type);
+            ctx.beginPath();
+            ctx.arc(powerUp.x, powerUp.y, powerUp.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        });
+    }
+
+    getColor(type) {
+        switch (type) {
+            case 'health':
+                return 'green';
+            case 'ammo':
+                return 'blue';
+            case 'speed':
+                return 'red';
+            default:
+                return 'white';
+        }
+    }
+
+    checkPlayerCollision() {
+        this.powerUps.forEach((powerUp, index) => {
+            const distX = powerUp.x - this.player.x;
+            const distY = powerUp.y - this.player.y;
+            const distance = Math.sqrt(distX * distX + distY * distY);
+
+            if (distance < powerUp.size / 2 + this.player.width / 2) {
+                this.implementPowerup(powerUp.type);
+                this.powerUps.splice(index, 1);
+            }
+        });
+    }
+
+    implementPowerup(type) {
+        switch (type) {
+            case 'health':
+                player.attack = 0;
+                break;
+            case 'ammo':
+                Bullet2 = 20;
+                bullet3 = 10;
+                break;
+            case 'speed':
+                zombieSpeed -= 0.5;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+
 let player = new Player(canvas.width / 2, groundLevel, 66, 150, 5);
+let powerUpManager = new PowerUp(canvas.width, canvas.height, player);
 let bullets = [];
 let mouse = { x: 0, y: 0 };
 const playerGroundY = groundLevel - player.height / 2;
-const jetpackLifetime = 5000;
+const jetpackLifetime = 10000;
 let jetpackUsedTime = 0;
 let jetpackActive = false;
 const jetpackMaxHeight = 300;
@@ -1791,6 +2024,11 @@ function shoot(auto = false) {
     const speed = 10;
     const speedX = Math.cos(angle) * speed;
     const speedY = Math.sin(angle) * speed;
+    if (angle > -Math.PI / 2 && angle < Math.PI / 2) {
+        player.image = playerSR;
+    } else {
+        player.image = playerSL;
+    }
     let radius = 3;
     if (!auto) {
         if (player.weapon == 1) {
@@ -1805,8 +2043,15 @@ function shoot(auto = false) {
             bullet3--;
         }
         if ((player.weapon == 2 && Bullet2 > 0) || player.weapon == 1 || (player.weapon == 3 && bullet3 > 0)) {
-            const bullet = new Bullet(player.x, player.y, speedX, speedY, radius);
-            bullets.push(bullet);
+            if (player.weapon == 3) {
+                const bullet = new Bullet(player.x, player.y - player.height / 5, speedX, speedY, radius);
+                bullets.push(bullet);
+            }
+            else {
+                const bullet = new Bullet(player.x, player.y, speedX, speedY, radius);
+                bullets.push(bullet);
+            }
+            //bullets.push(bullet);
             player.recoil = player.recoilDuration;
         }
     }
@@ -1832,7 +2077,6 @@ class Blast {
         this.frames = 0;
     }
     draw(ctx) {
-
         if (this.image) {
             console.log("drawing");
             ctx.drawImage(
@@ -1852,7 +2096,7 @@ class Blast {
         }
     }
 
-    update() {
+    update(ctx) {
         this.frames++;
         //console.log(this.frames);
         if (this.frames <= 7) { this.draw(ctx) };
@@ -1862,9 +2106,6 @@ class Blast {
 function update() {
     player.update();
     bullets.forEach(bullet => bullet.update());
-    // newBlasts.forEach(happ => {
-    //     happ.update();
-    // })
     // Remove bullets that are out of bounds
     bullets = bullets.filter(bullet => (bullet.x > 0 && bullet.x < canvas.width && bullet.y > 0 && bullet.y < canvas.height));
 
@@ -1883,9 +2124,8 @@ function update() {
     MinesPlaced.forEach(Mine => {
         Mine.update();
     });
-    newBlasts.forEach(happ => {
-        happ.update();
-    })
+    powerUpManager.update();
+    //powerUpManager.checkPlayerCollision();
 }
 
 function render() {
@@ -1906,6 +2146,7 @@ function render() {
     updateZombies();
     drawZombies();
     bullets.forEach(bullet => bullet.draw(ctx));
+    powerUpManager.draw(ctx);
 }
 
 const backgroundImage = new Image();
@@ -1941,6 +2182,9 @@ function gameLoop() {
         });
         if (Number.isInteger(timeTaken)) {
             //console.log('entered');
+            if (timeTaken % 100 == 0) {
+                powerUpManager.generateRandomPowerUp();
+            }
             if (timeTaken % 30 == 0) {
                 createClimber();
             }
